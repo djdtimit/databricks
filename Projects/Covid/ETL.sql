@@ -1,19 +1,33 @@
 -- Databricks notebook source
 -- MAGIC %python
--- MAGIC %pip install kaggle
+-- MAGIC import os
+-- MAGIC import logging
+-- MAGIC 
+-- MAGIC class kaggle:
+-- MAGIC   
+-- MAGIC   def __init__(self, user_name, key):
+-- MAGIC     self.user_name = user_name
+-- MAGIC     print(self.user_name)
+-- MAGIC     self.key = key
+-- MAGIC   
+-- MAGIC   def download_dataset(self, dataset_name, destination):
+-- MAGIC     os.environ['KAGGLE_USERNAME'] = self.user_name
+-- MAGIC     os.environ['KAGGLE_KEY'] = self.key
+-- MAGIC     os.system(f"""kaggle datasets download {dataset_name} -p /dbfs/tmp/ --force""")
+-- MAGIC     logging.info(f"""kaggle datasets download {dataset_name} -p /dbfs/tmp/ --force""")
+-- MAGIC     os.system(f"""unzip -o /dbfs/tmp/{dataset_name.split('/')[1]}.zip -d /dbfs/{destination}""")
+-- MAGIC     logging.info(f"""unzip -o /dbfs/tmp/{dataset_name.split('/')[1]}.zip -d /dbfs/{destination}""")
+-- MAGIC     
+-- MAGIC 
+-- MAGIC   
 
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC import os
--- MAGIC os.system(f"""export KAGGLE_USERNAME={dbutils.secrets.get('KAGGLE', 'KAGGLE_USERNAME')}""")
--- MAGIC os.system(f"""export KAGGLE_KEY={dbutils.secrets.get('KAGGLE', 'KAGGLE_KEY')}""")
--- MAGIC os.system('kaggle datasets download gpreda/covid-world-vaccination-progress -p /dbfs/tmp/ --force')
--- MAGIC os.system('kaggle datasets download headsortails/covid19-tracking-germany -p /dbfs/tmp/ --force')
--- MAGIC os.system('kaggle datasets download josephassaker/covid19-global-dataset -p /dbfs/tmp/ --force')
--- MAGIC os.system('unzip -o /tmp/covid-world-vaccination-progress.zip -d /dbfs/mnt/kaggle/Covid/Bronze/covid_19_world_vaccination_progress/')
--- MAGIC os.system('unzip -o /tmp/covid19-tracking-germany.zip -d /dbfs/mnt/kaggle/Covid/Bronze/covid19-tracking-germany/')
--- MAGIC os.system('unzip -o /tmp/covid19-global-dataset.zip -d /dbfs/mnt/kaggle/Covid/Bronze/covid19-global-dataset/')
+-- MAGIC kaggle = kaggle(dbutils.secrets.get('KAGGLE', 'KAGGLE_USERNAME'), dbutils.secrets.get('KAGGLE', 'KAGGLE_KEY'))
+-- MAGIC kaggle.download_dataset('gpreda/covid-world-vaccination-progress', 'mnt/kaggle/Covid/Bronze/covid_19_world_vaccination_progress/')
+-- MAGIC kaggle.download_dataset('headsortails/covid19-tracking-germany', 'mnt/kaggle/Covid/Bronze/covid19-tracking-germany/')
+-- MAGIC kaggle.download_dataset('josephassaker/covid19-global-dataset', 'mnt/kaggle/Covid/Bronze/covid19-global-dataset/')
 
 -- COMMAND ----------
 
