@@ -7,7 +7,6 @@
 -- MAGIC   
 -- MAGIC   def __init__(self, user_name, key):
 -- MAGIC     self.user_name = user_name
--- MAGIC     print(self.user_name)
 -- MAGIC     self.key = key
 -- MAGIC   
 -- MAGIC   def download_dataset(self, dataset_name, destination):
@@ -166,6 +165,32 @@ LOCATION "/mnt/kaggle/Covid/Bronze/covid19-global-dataset/worldometer_coronaviru
 -- COMMAND ----------
 
 REFRESH TABLE TBL_worldometer_coronavirus_summary_data_BRONZE
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **country_mapping_table**
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS TBL_COUNTRY_MAPPING_BRONZE USING DELTA LOCATION '/mnt/kaggle/Covid/Bronze/mapping/'
+AS 
+SELECT trim(country) as target_country_name, trim(country) as source_country_name, current_timestamp as INSERT_TS, current_timestamp as UPDATE_TS FROM (
+SELECT distinct upper(trim(country)) as country FROM tbl_country_vaccinations_bronze
+UNION
+SELECT distinct upper(trim(country)) as country FROM tbl_worldometer_coronavirus_summary_data_bronze)
+
+-- COMMAND ----------
+
+MERGE INTO TBL_COUNTRY_MAPPING_BRONZE AS T
+USING 
+(SELECT trim(country) as target_country_name, trim(country) as source_country_name, current_timestamp as INSERT_TS, current_timestamp as UPDATE_TS FROM (
+SELECT distinct upper(trim(country)) as country FROM tbl_country_vaccinations_bronze
+UNION
+SELECT distinct upper(trim(country)) as country FROM tbl_worldometer_coronavirus_summary_data_bronze)) S
+on T.source_country_name = S.source_country_name
+WHEN NOT MATCHED
+THEN INSERT ( target_Country_name, source_Country_name, insert_ts, update_ts ) VALUES (S.target_country_name, S.source_country_name, current_timestamp, current_Timestamp)
 
 -- COMMAND ----------
 
