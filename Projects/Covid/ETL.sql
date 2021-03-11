@@ -1,21 +1,31 @@
 -- Databricks notebook source
 -- MAGIC %python
 -- MAGIC import os
--- MAGIC import logging
 -- MAGIC 
--- MAGIC class kaggle:
+-- MAGIC class kaggle_interface:
 -- MAGIC   
 -- MAGIC   def __init__(self, user_name, key):
 -- MAGIC     self.user_name = user_name
 -- MAGIC     self.key = key
--- MAGIC   
--- MAGIC   def download_dataset(self, dataset_name, destination):
 -- MAGIC     os.environ['KAGGLE_USERNAME'] = self.user_name
 -- MAGIC     os.environ['KAGGLE_KEY'] = self.key
--- MAGIC     os.system(f"""kaggle datasets download {dataset_name} -p /dbfs/tmp/ --force""")
--- MAGIC     logging.info(f"""kaggle datasets download {dataset_name} -p /dbfs/tmp/ --force""")
+-- MAGIC     from kaggle.api.kaggle_api_extended import KaggleApi
+-- MAGIC     self.api = KaggleApi()
+-- MAGIC     self.api.authenticate()
+-- MAGIC   
+-- MAGIC   def download_dataset(self, dataset_name, destination, backup = True):
+-- MAGIC     self.api.dataset_download_files(dataset_name, path = '/dbfs/tmp/', force = True)
+-- MAGIC 
 -- MAGIC     os.system(f"""unzip -o /dbfs/tmp/{dataset_name.split('/')[1]}.zip -d /dbfs/{destination}""")
--- MAGIC     logging.info(f"""unzip -o /dbfs/tmp/{dataset_name.split('/')[1]}.zip -d /dbfs/{destination}""")
+-- MAGIC     if backup:
+-- MAGIC       os.system(f"""unzip -o /dbfs/tmp/{dataset_name.split('/')[1]}.zip -d /dbfs/{destination}{self.__get_dataset_metadata(dataset_name).strftime("%Y-%m-%d")}/""")
+-- MAGIC     
+-- MAGIC   def __get_dataset_metadata(self, dataset_name):
+-- MAGIC     datasets=self.api.dataset_list(search=dataset_name)
+-- MAGIC     dataset_info = {str(dataset):dataset.lastUpdated for dataset in datasets}
+-- MAGIC     return dataset_info[dataset_name]
+-- MAGIC     
+-- MAGIC     
 -- MAGIC     
 -- MAGIC 
 -- MAGIC   
@@ -23,10 +33,10 @@
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC kaggle = kaggle(dbutils.secrets.get('KAGGLE', 'KAGGLE_USERNAME'), dbutils.secrets.get('KAGGLE', 'KAGGLE_KEY'))
--- MAGIC kaggle.download_dataset('gpreda/covid-world-vaccination-progress', 'mnt/kaggle/Covid/Bronze/covid_19_world_vaccination_progress/')
--- MAGIC kaggle.download_dataset('headsortails/covid19-tracking-germany', 'mnt/kaggle/Covid/Bronze/covid19-tracking-germany/')
--- MAGIC kaggle.download_dataset('josephassaker/covid19-global-dataset', 'mnt/kaggle/Covid/Bronze/covid19-global-dataset/')
+-- MAGIC interface = kaggle_interface(dbutils.secrets.get('KAGGLE', 'KAGGLE_USERNAME'), dbutils.secrets.get('KAGGLE', 'KAGGLE_KEY'))
+-- MAGIC interface.download_dataset('gpreda/covid-world-vaccination-progress', 'mnt/kaggle/Covid/Bronze/covid_19_world_vaccination_progress/')
+-- MAGIC interface.download_dataset('headsortails/covid19-tracking-germany', 'mnt/kaggle/Covid/Bronze/covid19-tracking-germany/')
+-- MAGIC interface.download_dataset('josephassaker/covid19-global-dataset', 'mnt/kaggle/Covid/Bronze/covid19-global-dataset/')
 
 -- COMMAND ----------
 
@@ -70,10 +80,6 @@ LOCATION "/mnt/kaggle/Covid/Bronze/covid_19_world_vaccination_progress/country_v
 
 -- COMMAND ----------
 
-REFRESH TABLE TBL_country_vaccinations_bronze
-
--- COMMAND ----------
-
 -- MAGIC %md
 -- MAGIC **covid_DE**
 
@@ -94,10 +100,6 @@ LOCATION "/mnt/kaggle/Covid/Bronze/covid19-tracking-germany/covid_de.csv"
 
 -- COMMAND ----------
 
-REFRESH TABLE TBL_country_vaccinations_bronze
-
--- COMMAND ----------
-
 -- MAGIC %md
 -- MAGIC **Demographics_DE**
 
@@ -111,10 +113,6 @@ POPULATION STRING)
 USING CSV
 OPTIONS ("header" True)
 LOCATION '/mnt/kaggle/Covid/Bronze/covid19-tracking-germany/demographics_de.csv'
-
--- COMMAND ----------
-
-REFRESH TABLE TBL_DEMOGRAPHICS_DE_BRONZE
 
 -- COMMAND ----------
 
@@ -134,10 +132,6 @@ DAILY_NEW_DEATHS STRING)
 USING CSV
 OPTIONS ("header" True)
 LOCATION '/mnt/kaggle/Covid/Bronze/covid19-global-dataset/worldometer_coronavirus_daily_data.csv'
-
--- COMMAND ----------
-
-REFRESH TABLE TBL_Worldometer_coronavirus_daily_data_bronze
 
 -- COMMAND ----------
 
@@ -161,10 +155,6 @@ POPULATION STRING)
 USING CSV
 OPTIONS ("header" True)
 LOCATION "/mnt/kaggle/Covid/Bronze/covid19-global-dataset/worldometer_coronavirus_summary_data.csv"
-
--- COMMAND ----------
-
-REFRESH TABLE TBL_worldometer_coronavirus_summary_data_BRONZE
 
 -- COMMAND ----------
 
