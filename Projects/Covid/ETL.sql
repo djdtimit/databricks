@@ -35,14 +35,40 @@
 -- COMMAND ----------
 
 -- MAGIC %python
+-- MAGIC from datetime import date
+-- MAGIC 
 -- MAGIC class data_lake:
 -- MAGIC   
--- MAGIC   def __init__(self, archive_path, ingestion_path, raw_path, qualified_path, curated_path):
--- MAGIC     self.archive_path = archive_path
--- MAGIC     self.ingestion_path = ingestion_path
--- MAGIC     self.raw_path = raw_path
--- MAGIC     self.qualified_path = qualified_path
--- MAGIC     self.curated_path = curated_path
+-- MAGIC   def __init__(self, archive_schema = '', ingestion_schema = '', raw_schema = '', qualified_schema = '', curated_schema = ''):
+-- MAGIC     self.archive_schema = archive_schema
+-- MAGIC     self.ingestion_schema = ingestion_schema
+-- MAGIC     self.raw_schema = raw_schema
+-- MAGIC     self.qualified_schema = qualified_schema
+-- MAGIC     self.curated_schema = curated_schema
+-- MAGIC     
+-- MAGIC     if self.archive_schema != '':
+-- MAGIC       self.archive_views = spark.sql(f"show views in {self.archive_schema}").select('namespace', 'viewName').collect()
+-- MAGIC     if self.ingestion_schema != '':
+-- MAGIC       self.ingestion_views = spark.sql(f"show views in {self.ingestion_schema}").select('namespace', 'viewName').collect()
+-- MAGIC     if self.raw_schema != '':
+-- MAGIC       self.raw_views = spark.sql(f"show views in {self.raw_schema}").select('namespace', 'viewName').collect()
+-- MAGIC     if self.qualified_schema != '':
+-- MAGIC       self.qualified_views = spark.sql(f"show views in {self.qualified_schema}").select('namespace', 'viewName').collect()
+-- MAGIC     if self.curated_schema != '':
+-- MAGIC       self.curated_views = spark.sql(f"show views in {self.curated_schema}").select('namespace', 'viewName').collect()
+-- MAGIC     
+-- MAGIC   def mv_ingestion_to_archive(self):
+-- MAGIC     for raw_view in self.raw_views:
+-- MAGIC       df_source = self.__read_source_table(raw_view)
+-- MAGIC       self.__mv_files(df_source)
+-- MAGIC       
+-- MAGIC   def __read_source_table(self, view_name):
+-- MAGIC     df_source = spark.read.table(f"""{view_name['namespace']}.{view_name['viewName']}""").select('source').distinct().collect()
+-- MAGIC     return df_source
+-- MAGIC   
+-- MAGIC   def __mv_files(self, df_source):
+-- MAGIC     today = date.today()
+-- MAGIC     dbutils.fs.mv(df_source[0]['source'], df_source[0]['source'].replace('/Ingestion/', f'/Archive/{today}/'), recurse=True)
 
 -- COMMAND ----------
 
@@ -93,7 +119,7 @@ CREATE TABLE IF NOT EXISTS covid_ingestion.TBL_country_vaccinations (
     daily_vaccinations_per_million STRING,
     vaccines STRING,
     source_name STRING,
-    source_website STRING
+    source_website STRING,
 ) USING CSV 
 OPTIONS ("header" True)
 LOCATION "/mnt/kaggle/Covid/Ingestion/covid_19_world_vaccination_progress/country_vaccinations.csv"
@@ -545,6 +571,12 @@ POPULATION,
 CURRENT_TIMESTAMP,
 CURRENT_TIMESTAMP,
 SOURCE)
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC dl = data_lake(ingestion_schema = 'covid_ingestion', raw_schema = 'covid_raw')
+-- MAGIC dl.mv_ingestion_to_archive()
 
 -- COMMAND ----------
 
