@@ -389,34 +389,60 @@ SOURCE)
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS covid_raw.TBL_COUNTRY_MAPPING USING DELTA LOCATION '/mnt/kaggle/Covid/Raw/country_mapping/'
-AS 
-SELECT trim(country) as target_country_name, trim(country) as source_country_name, current_timestamp as INSERT_TS, current_timestamp as UPDATE_TS FROM (
-SELECT distinct upper(trim(country)) as country FROM covid_raw.TBL_country_vaccinations
-UNION
-SELECT distinct upper(trim(country)) as country FROM covid_raw.tbl_worldometer_coronavirus_summary_data)
+CREATE TABLE IF NOT EXISTS covid_raw.TBL_COUNTRY_MAPPING (
+TARGET_COUNTRY_NAME STRING,
+SOURCE_COUNTRY_NAME STRING,
+INSERT_TS STRING,
+UPDATE_TS STRING
+)
+USING DELTA LOCATION '/mnt/kaggle/Covid/Raw/country_mapping/'
 
 -- COMMAND ----------
 
 MERGE INTO covid_raw.TBL_COUNTRY_MAPPING AS T
 USING 
 (SELECT trim(country) as target_country_name, trim(country) as source_country_name, current_timestamp as INSERT_TS, current_timestamp as UPDATE_TS FROM (
-SELECT distinct upper(trim(country)) as country FROM covid_raw.TBL_country_vaccinations
+SELECT distinct trim(country) as country FROM covid_raw.TBL_country_vaccinations
 UNION
-SELECT distinct upper(trim(country)) as country FROM covid_raw.tbl_worldometer_coronavirus_summary_data)) S
-on T.source_country_name = S.source_country_name
+SELECT distinct trim(country) as country FROM covid_raw.tbl_worldometer_coronavirus_summary_data)) S
+on UPPER(trim(T.source_country_name)) = UPPER(trim(S.source_country_name))
 WHEN NOT MATCHED
-THEN INSERT ( target_Country_name, source_Country_name, insert_ts, update_ts ) VALUES (S.target_country_name, S.source_country_name, current_timestamp, current_Timestamp)
+THEN INSERT ( target_Country_name, source_Country_name, insert_ts, update_ts) VALUES (S.target_country_name, S.source_country_name, current_timestamp, current_Timestamp)
+
 
 -- COMMAND ----------
 
-SELECT * FROM covid_raw.TBL_COUNTRY_MAPPING order by source_country_name
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Antigua and Barbuda', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Antigua And Barbuda';
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Hong Kong', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'China Hong Kong Sar';
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Macao', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'China Macao Sar';
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Cote d\'Ivoire', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Cote D Ivoire';
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Czech Republic', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Czechia';
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Falkland Islands', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Falkland Islands Malvinas';
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Isle of Man', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Isle Of Man';
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Trinidad and Tobago', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Trinidad And Tobago';
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Turks and Caicos Islands', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Turks And Caicos Islands';
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Vietnam', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Viet Nam';
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Cyprus', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Nothern Cyprus';
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'UK', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'United Kingdom';
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'USA', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'United States';
 
 -- COMMAND ----------
 
-UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'VIETNAM' WHERE source_country_name = 'VIET NAM';
-UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'USA' WHERE source_country_name = 'UNITED STATES';
-UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'UK' WHERE source_country_name = 'UNITED KINGDOM';
+-- MAGIC %md
+-- MAGIC Replace
+-- MAGIC 
+-- MAGIC 'Czechia' == "Czech Republic"
+-- MAGIC 'Isle of Man' == "Isle Of Man"
+-- MAGIC 'United Kingdom' == "UK"
+-- MAGIC 'United States' == "USA"
+-- MAGIC 'Northern Cyprus' == "Cyprus"
+-- MAGIC Drop
+-- MAGIC 
+-- MAGIC England
+-- MAGIC Wales
+-- MAGIC Scotland
+-- MAGIC Northern Ireland
+-- MAGIC (since they are a part of the UK)
 
 -- COMMAND ----------
 
