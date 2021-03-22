@@ -124,6 +124,10 @@ current_timestamp, current_Timestamp, source)
 
 -- COMMAND ----------
 
+optimize covid_raw.TBL_country_vaccinations
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC **Covid_DE**
 
@@ -203,6 +207,10 @@ SOURCE)
 
 -- COMMAND ----------
 
+optimize covid_raw.tbl_covid_de
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC **Demographics_DE**
 
@@ -241,6 +249,10 @@ WHEN NOT MATCHED THEN INSERT
 (STATE, GENDER, AGE_GROUP, POPULATION, INSERT_TS, UPDATE_TS, SOURCE)
 VALUES (STATE, GENDER, AGE_GROUP, POPULATION, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, SOURCE)
 
+
+-- COMMAND ----------
+
+optimize covid_raw.TBL_DEMOGRAPHICS_DE
 
 -- COMMAND ----------
 
@@ -291,6 +303,10 @@ INSERT
 (DATE, COUNTRY, CUMULATIVE_TOTAL_CASES, DAILY_NEW_CASES, ACTIVE_CASES, CUMULATIVE_TOTAL_DEATHS, DAILY_NEW_DEATHS, INSERT_TS, UPDATE_TS, SOURCE)
 VALUES 
 (DATE, COUNTRY, CUMULATIVE_TOTAL_CASES, DAILY_NEW_CASES, ACTIVE_CASES, CUMULATIVE_TOTAL_DEATHS, DAILY_NEW_DEATHS, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, SOURCE)
+
+-- COMMAND ----------
+
+optimize covid_raw.TBL_Worldometer_coronavirus_daily_data
 
 -- COMMAND ----------
 
@@ -378,6 +394,10 @@ SOURCE)
 
 -- COMMAND ----------
 
+OPTIMIZE covid_raw.TBL_worldometer_coronavirus_summary_data
+
+-- COMMAND ----------
+
 -- MAGIC %python
 -- MAGIC dl = data_lake(ingestion_schema = 'covid_ingestion', raw_schema = 'covid_raw')
 -- MAGIC dl.mv_ingestion_to_archive()
@@ -405,7 +425,7 @@ USING
 SELECT distinct trim(country) as country FROM covid_raw.TBL_country_vaccinations
 UNION
 SELECT distinct trim(country) as country FROM covid_raw.tbl_worldometer_coronavirus_summary_data)) S
-on UPPER(trim(T.source_country_name)) = UPPER(trim(S.source_country_name))
+on trim(T.source_country_name) = trim(S.source_country_name)
 WHEN NOT MATCHED
 THEN INSERT ( target_Country_name, source_Country_name, insert_ts, update_ts) VALUES (S.target_country_name, S.source_country_name, current_timestamp, current_Timestamp)
 
@@ -426,23 +446,13 @@ UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Cyprus', UPDATE_
 UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'UK', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'United Kingdom';
 UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'USA', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'United States';
 
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Saint Kitts and Nevis', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Saint Kitts And Nevis';
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Saint Vincent and the Grenadines', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Saint Vincent And the Grenadines';
+
+
 -- COMMAND ----------
 
--- MAGIC %md
--- MAGIC Replace
--- MAGIC 
--- MAGIC 'Czechia' == "Czech Republic"
--- MAGIC 'Isle of Man' == "Isle Of Man"
--- MAGIC 'United Kingdom' == "UK"
--- MAGIC 'United States' == "USA"
--- MAGIC 'Northern Cyprus' == "Cyprus"
--- MAGIC Drop
--- MAGIC 
--- MAGIC England
--- MAGIC Wales
--- MAGIC Scotland
--- MAGIC Northern Ireland
--- MAGIC (since they are a part of the UK)
+OPTIMIZE covid_raw.TBL_COUNTRY_MAPPING
 
 -- COMMAND ----------
 
