@@ -124,7 +124,7 @@ current_timestamp, current_Timestamp, source)
 
 -- COMMAND ----------
 
-optimize covid_raw.TBL_country_vaccinations
+OPTIMIZE covid_raw.TBL_country_vaccinations
 
 -- COMMAND ----------
 
@@ -207,7 +207,8 @@ SOURCE)
 
 -- COMMAND ----------
 
-optimize covid_raw.tbl_covid_de
+
+OPTIMIZE covid_raw.tbl_covid_de
 
 -- COMMAND ----------
 
@@ -252,7 +253,7 @@ VALUES (STATE, GENDER, AGE_GROUP, POPULATION, CURRENT_TIMESTAMP, CURRENT_TIMESTA
 
 -- COMMAND ----------
 
-optimize covid_raw.TBL_DEMOGRAPHICS_DE
+OPTIMIZE covid_raw.TBL_DEMOGRAPHICS_DE
 
 -- COMMAND ----------
 
@@ -306,7 +307,7 @@ VALUES
 
 -- COMMAND ----------
 
-optimize covid_raw.TBL_Worldometer_coronavirus_daily_data
+OPTIMIZE covid_raw.TBL_Worldometer_coronavirus_daily_data
 
 -- COMMAND ----------
 
