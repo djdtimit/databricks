@@ -207,6 +207,7 @@ SOURCE)
 
 -- COMMAND ----------
 
+
 OPTIMIZE covid_raw.tbl_covid_de
 
 -- COMMAND ----------
@@ -425,7 +426,7 @@ USING
 SELECT distinct trim(country) as country FROM covid_raw.TBL_country_vaccinations
 UNION
 SELECT distinct trim(country) as country FROM covid_raw.tbl_worldometer_coronavirus_summary_data)) S
-on UPPER(trim(T.source_country_name)) = UPPER(trim(S.source_country_name))
+on trim(T.source_country_name) = trim(S.source_country_name)
 WHEN NOT MATCHED
 THEN INSERT ( target_Country_name, source_Country_name, insert_ts, update_ts) VALUES (S.target_country_name, S.source_country_name, current_timestamp, current_Timestamp)
 
@@ -445,6 +446,10 @@ UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Vietnam', UPDATE
 UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Cyprus', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Nothern Cyprus';
 UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'UK', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'United Kingdom';
 UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'USA', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'United States';
+
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Saint Kitts and Nevis', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Saint Kitts And Nevis';
+UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Saint Vincent and the Grenadines', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Saint Vincent And the Grenadines';
+
 
 -- COMMAND ----------
 
