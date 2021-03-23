@@ -38,6 +38,28 @@ V.COUNTRY = M.SOURCE_COUNTRY_NAME
 
 -- COMMAND ----------
 
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_country_vaccinations (
+COUNTRY STRING
+,ISO_CODE STRING
+,date DATE
+,total_vaccinations INTEGER
+,people_vaccinated INTEGER
+,people_fully_vaccinated INTEGER
+,daily_vaccinations_raw INTEGER
+,daily_vaccinations INTEGER
+,total_vaccinations_per_hundred DECIMAL(23,5)
+,people_vaccinated_per_hundred DECIMAL(23,5)
+,people_fully_vaccinated_per_hundred DECIMAL(23,5)
+,daily_vaccinations_per_million DECIMAL(23,5)
+,vaccines STRING
+,source_name STRING
+,source_website STRING
+)
+USING DELTA
+LOCATION "/mnt/kaggle/Covid/Qualified/covid_19_world_vaccination_progress/country_vaccinations/"
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC **Covid_DE**
 
@@ -57,6 +79,20 @@ FROM covid_raw.TBL_COVID_DE
 
 -- COMMAND ----------
 
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_covid_de (
+state STRING,
+country STRING,
+age_group STRING,
+gender STRING,
+date DATE,
+CASES INTEGER,
+DEATH INTEGER,
+RECOVERED INTEGER)
+USING DELTA
+LOCATION "/mnt/kaggle/Covid/Qualified/covid19-tracking-germany/Covid_DE/"
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC **Demographics_DE**
 
@@ -71,12 +107,22 @@ FROM covid_raw.TBL_DEMOGRAPHICS_DE
 
 -- COMMAND ----------
 
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_demographics_DE (
+state STRING,
+GENDER STRING,
+AGE_GROUP STRING,
+POPULAITON INTEGER)
+USING DELTA
+LOCATION '/mnt/kaggle/Covid/Qualified/covid19-tracking-germany/Demographics_DE/'
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC **Worldometer_coronavirus_daily_data**
 
 -- COMMAND ----------
 
-CREATE OR REPLACE VIEW covid_qualified.worldometer_coronavirus_daily_data as
+CREATE OR REPLACE VIEW covid_qualified.VW_worldometer_coronavirus_daily_data as
 SELECT 
 cast(date as date),
 target_country_name as country,
@@ -92,12 +138,26 @@ D.COUNTRY = M.SOURCE_COUNTRY_NAME
 
 -- COMMAND ----------
 
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_worldometer_coronavirus_daily_data (
+date date,
+country STRING,
+CUMULATIVE_TOTAL_CASES INTEGER,
+DAILY_NEW_CASES INTEGER,
+ACTIVE_CASES INTEGER,
+CUMULATIVE_TOTAL_DEATHS INTEGER,
+DAILY_NEW_DEATHS INTEGER
+)
+USING DELTA
+LOCATION '/mnt/kaggle/Covid/Qualified/covid19-global-dataset/worldometer_coronavirus_daily_data/'
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC **worldometer_coronavirus_summary_data**
 
 -- COMMAND ----------
 
-CREATE OR REPLACE VIEW covid_qualified.worldometer_coronavirus_summary_data AS
+CREATE OR REPLACE VIEW covid_qualified.VW_worldometer_coronavirus_summary_data AS
 SELECT 
 target_country_name as country,
 continent,
@@ -115,6 +175,31 @@ covid_raw.TBL_worldometer_coronavirus_summary_data s
 join covid_raw.TBL_COUNTRY_MAPPING M
 ON
 s.COUNTRY = M.SOURCE_COUNTRY_NAME
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_worldometer_coronavirus_summary_data (
+country STRING,
+continent STRING,
+total_confirmed INTEGER,
+total_deaths INTEGER,
+total_recovered INTEGER,
+active_cases INTEGER,
+Serious_or_critical INTEGER,
+total_cases_per_lm_population DECIMAL(23,5),
+total_tests INTEGER,
+total_tests_per_lm_population DECIMAL(23,5),
+population INTEGER
+)
+USING DELTA
+LOCATION "/mnt/kaggle/Covid/Qualified/covid19-global-dataset/worldometer_coronavirus_summary_data/"
+
+-- COMMAND ----------
+
+select country, date, daily_new_cases
+         from covid_qualified.worldometer_coronavirus_daily_data 
+         --where country = 'Germany'
+order by country, date
 
 -- COMMAND ----------
 
