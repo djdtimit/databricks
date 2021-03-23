@@ -54,9 +54,72 @@ COUNTRY STRING
 ,vaccines STRING
 ,source_name STRING
 ,source_website STRING
+,INSERT_TS TIMESTAMP
+,UPDATE_TS TIMESTAMP
 )
 USING DELTA
 LOCATION "/mnt/kaggle/Covid/Qualified/covid_19_world_vaccination_progress/country_vaccinations/"
+
+-- COMMAND ----------
+
+MERGE INTO covid_qualified.TBL_country_vaccinations T
+USING 
+covid_qualified.VW_country_vaccinations S
+ON T.COUNTRY = S.COUNTRY AND T.DATE = S.DATE
+WHEN MATCHED THEN
+UPDATE SET
+T.ISO_CODE = S.ISO_CODE
+,T.total_vaccinations = S.total_vaccinations
+,T.people_vaccinated = S.people_vaccinated
+,T.people_fully_vaccinated = S.people_fully_vaccinated
+,T.daily_vaccinations_raw = S.daily_vaccinations_raw
+,T.daily_vaccinations = S.daily_vaccinations
+,T.total_vaccinations_per_hundred = S.total_vaccinations_per_hundred
+,T.people_vaccinated_per_hundred = S.people_vaccinated_per_hundred
+,T.people_fully_vaccinated_per_hundred = S.people_fully_vaccinated_per_hundred
+,T.daily_vaccinations_per_million = S.daily_vaccinations_per_million
+,T.vaccines = S.vaccines
+,T.source_name = S.source_name
+,T.source_website = S.source_website
+,T.UPDATE_TS = CURRENT_TIMESTAMP
+WHEN NOT MATCHED THEN INSERT
+(
+T.COUNTRY
+,T.ISO_CODE
+,T.date
+,T.total_vaccinations
+,T.people_vaccinated
+,T.people_fully_vaccinated
+,T.daily_vaccinations_raw
+,T.daily_vaccinations
+,T.total_vaccinations_per_hundred
+,T.people_vaccinated_per_hundred
+,T.people_fully_vaccinated_per_hundred
+,T.daily_vaccinations_per_million
+,T.vaccines
+,T.source_name
+,T.source_website
+,T.INSERT_TS
+,T.UPDATE_TS
+)
+VALUES (
+S.COUNTRY
+,S.ISO_CODE
+,S.date
+,S.total_vaccinations
+,S.people_vaccinated
+,S.people_fully_vaccinated
+,S.daily_vaccinations_raw
+,S.daily_vaccinations
+,S.total_vaccinations_per_hundred
+,S.people_vaccinated_per_hundred
+,S.people_fully_vaccinated_per_hundred
+,S.daily_vaccinations_per_million
+,S.vaccines
+,S.source_name
+,S.source_website
+,CURRENT_TIMESTAMP
+,CURRENT_TIMESTAMP)
 
 -- COMMAND ----------
 
@@ -87,9 +150,44 @@ gender STRING,
 date DATE,
 CASES INTEGER,
 DEATH INTEGER,
-RECOVERED INTEGER)
+RECOVERED INTEGER
+,INSERT_TS TIMESTAMP
+,UPDATE_TS TIMESTAMP)
 USING DELTA
 LOCATION "/mnt/kaggle/Covid/Qualified/covid19-tracking-germany/Covid_DE/"
+
+-- COMMAND ----------
+
+MERGE INTO covid_qualified.TBL_covid_de T 
+USING
+covid_qualified.VW_covid_de S
+ON T.state = S.state and T.country = S.country AND T.age_group = S.age_group and T.gender = S.gender and T.date = s.date
+WHEN MATCHED THEN
+UPDATE SET T.CASES = S.CASES, T.DEATH = S.DEATH, T.RECOVERED = S.RECOVERED, T.UPDATE_TS = CURRENT_TIMESTAMP
+WHEN NOT MATCHED THEN
+INSERT 
+(T.state
+,T.country
+,T.age_group
+,T.gender
+,T.date
+,T.CASES
+,T.DEATH
+,T.RECOVERED
+,T.INSERT_TS
+,T.UPDATE_TS
+)
+VALUES
+(S.state
+,S.country
+,S.age_group
+,S.gender
+,S.date
+,S.CASES
+,S.DEATH
+,S.RECOVERED
+,CURRENT_TIMESTAMP
+,CURRENT_TIMESTAMP)
 
 -- COMMAND ----------
 
@@ -111,9 +209,23 @@ CREATE TABLE IF NOT EXISTS covid_qualified.TBL_demographics_DE (
 state STRING,
 GENDER STRING,
 AGE_GROUP STRING,
-POPULAITON INTEGER)
+POPULATION INTEGER
+,INSERT_TS TIMESTAMP
+,UPDATE_TS TIMESTAMP)
 USING DELTA
 LOCATION '/mnt/kaggle/Covid/Qualified/covid19-tracking-germany/Demographics_DE/'
+
+-- COMMAND ----------
+
+MERGE INTO covid_qualified.TBL_demographics_DE T
+USING
+covid_qualified.VW_demographics_de S
+ON T.state = S.state and T.gender = S.gender and T.age_group = S.age_group
+WHEN MATCHED THEN 
+UPDATE SET T.POPULATION = S.POPULATION, T.UPDATE_TS = CURRENT_TIMESTAMP
+WHEN NOT MATCHED THEN
+INSERT (T.STATE, T.GENDER, T.AGE_GROUP, T.POPULATION, T.INSERT_TS, T.UPDATE_TS) 
+VALUES (S.STATE, S.GENDER, S.AGE_GROUP, S.POPULATION, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 
 -- COMMAND ----------
 
@@ -146,9 +258,47 @@ DAILY_NEW_CASES INTEGER,
 ACTIVE_CASES INTEGER,
 CUMULATIVE_TOTAL_DEATHS INTEGER,
 DAILY_NEW_DEATHS INTEGER
+,INSERT_TS TIMESTAMP
+,UPDATE_TS TIMESTAMP
 )
 USING DELTA
 LOCATION '/mnt/kaggle/Covid/Qualified/covid19-global-dataset/worldometer_coronavirus_daily_data/'
+
+-- COMMAND ----------
+
+MERGE INTO covid_qualified.TBL_worldometer_coronavirus_daily_data T
+USING covid_qualified.VW_worldometer_coronavirus_daily_data S
+ON T.DATE = S.DATE AND T.COUNTRY = S.COUNTRY
+WHEN MATCHED THEN
+UPDATE SET 
+T.CUMULATIVE_TOTAL_CASES = S.CUMULATIVE_TOTAL_CASES,
+T.DAILY_NEW_CASES = S.DAILY_NEW_CASES,
+T.ACTIVE_CASES = S.ACTIVE_CASES,
+T.CUMULATIVE_TOTAL_DEATHS = S.CUMULATIVE_TOTAL_DEATHS,
+T.DAILY_NEW_DEATHS = S.DAILY_NEW_DEATHS,
+T.UPDATE_TS = CURRENT_TIMESTAMP
+WHEN NOT MATCHED THEN
+INSERT (
+T.date,
+T.country,
+T.CUMULATIVE_TOTAL_CASES,
+T.DAILY_NEW_CASES,
+T.ACTIVE_CASES,
+T.CUMULATIVE_TOTAL_DEATHS,
+T.DAILY_NEW_DEATHS,
+T.INSERT_TS,
+T.UPDATE_TS
+)
+VALUES (
+S.date,
+S.country,
+S.CUMULATIVE_TOTAL_CASES,
+S.DAILY_NEW_CASES,
+S.ACTIVE_CASES,
+S.CUMULATIVE_TOTAL_DEATHS,
+S.DAILY_NEW_DEATHS,
+current_timestamp,
+current_timestamp)
 
 -- COMMAND ----------
 
@@ -190,16 +340,58 @@ total_cases_per_lm_population DECIMAL(23,5),
 total_tests INTEGER,
 total_tests_per_lm_population DECIMAL(23,5),
 population INTEGER
+,INSERT_TS TIMESTAMP
+,UPDATE_TS TIMESTAMP
 )
 USING DELTA
 LOCATION "/mnt/kaggle/Covid/Qualified/covid19-global-dataset/worldometer_coronavirus_summary_data/"
 
 -- COMMAND ----------
 
-select country, date, daily_new_cases
-         from covid_qualified.worldometer_coronavirus_daily_data 
-         --where country = 'Germany'
-order by country, date
+MERGE INTO covid_qualified.TBL_worldometer_coronavirus_summary_data T
+USING
+covid_qualified.VW_worldometer_coronavirus_summary_data S
+ON T.country = S.country and T.continent = S.continent
+WHEN MATCHED THEN
+UPDATE SET 
+T.total_confirmed = S.total_confirmed,
+T.total_deaths = S.total_deaths,
+T.total_recovered = S.total_recovered,
+T.active_cases = S.active_cases,
+T.Serious_or_critical = S.Serious_or_critical,
+T.total_cases_per_lm_population = S.total_cases_per_lm_population,
+T.total_tests = S.total_tests,
+T.total_tests_per_lm_population = S.total_tests_per_lm_population,
+T.population = S.population,
+T.UPDATE_TS = CURRENT_TIMESTAMP
+WHEN NOT MATCHED THEN
+INSERT (T.country,
+T.continent,
+T.total_confirmed,
+T.total_deaths,
+T.total_recovered,
+T.active_cases,
+T.Serious_or_critical,
+T.total_cases_per_lm_population,
+T.total_tests,
+T.total_tests_per_lm_population,
+T.population,
+T.INSERT_TS,
+T.UPDATE_TS)
+VALUES (
+S.country,
+S.continent,
+S.total_confirmed,
+S.total_deaths,
+S.total_recovered,
+S.active_cases,
+S.Serious_or_critical,
+S.total_cases_per_lm_population,
+S.total_tests,
+S.total_tests_per_lm_population,
+S.population,
+CURRENT_TIMESTAMP,
+CURRENT_TIMESTAMP)
 
 -- COMMAND ----------
 
