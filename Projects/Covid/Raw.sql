@@ -443,7 +443,6 @@ UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Isle of Man', UP
 UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Trinidad and Tobago', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Trinidad And Tobago';
 UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Turks and Caicos Islands', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Turks And Caicos Islands';
 UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Vietnam', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Viet Nam';
-UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Cyprus', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'Nothern Cyprus';
 UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'UK', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'United Kingdom';
 UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'USA', UPDATE_TS = CURRENT_TIMESTAMP WHERE source_country_name = 'United States';
 
@@ -454,7 +453,3 @@ UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Saint Vincent an
 -- COMMAND ----------
 
 OPTIMIZE covid_raw.TBL_COUNTRY_MAPPING
-
--- COMMAND ----------
-
-

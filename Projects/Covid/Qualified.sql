@@ -4,6 +4,11 @@
 
 -- COMMAND ----------
 
+CREATE WIDGET TEXT update_duration_days DEFAULT "10"
+
+
+-- COMMAND ----------
+
 CREATE DATABASE IF NOT EXISTS covid_qualified
 
 -- COMMAND ----------
@@ -65,8 +70,11 @@ LOCATION "/mnt/kaggle/Covid/Qualified/covid_19_world_vaccination_progress/countr
 MERGE INTO covid_qualified.TBL_country_vaccinations T
 USING 
 covid_qualified.VW_country_vaccinations S
-ON T.COUNTRY = S.COUNTRY AND T.DATE = S.DATE
-WHEN MATCHED THEN
+ON T.COUNTRY = S.COUNTRY AND T.DATE = S.DATE AND T.ISO_CODE = S.ISO_CODE
+WHEN MATCHED and datediff(current_date, date(T.UPDATE_TS)) >= getArgument("update_duration_days")
+-- data cleaning
+AND S.ISO_CODE IS NOT NULL
+THEN
 UPDATE SET
 T.ISO_CODE = S.ISO_CODE
 ,T.total_vaccinations = S.total_vaccinations
@@ -82,7 +90,10 @@ T.ISO_CODE = S.ISO_CODE
 ,T.source_name = S.source_name
 ,T.source_website = S.source_website
 ,T.UPDATE_TS = CURRENT_TIMESTAMP
-WHEN NOT MATCHED THEN INSERT
+WHEN NOT MATCHED 
+-- Data Cleaning
+AND S.ISO_CODE IS NOT NULL 
+THEN INSERT
 (
 T.COUNTRY
 ,T.ISO_CODE
@@ -162,7 +173,8 @@ MERGE INTO covid_qualified.TBL_covid_de T
 USING
 covid_qualified.VW_covid_de S
 ON T.state = S.state and T.country = S.country AND T.age_group = S.age_group and T.gender = S.gender and T.date = s.date
-WHEN MATCHED THEN
+WHEN MATCHED and datediff(current_date, date(T.UPDATE_TS)) >= getArgument("update_duration_days") 
+THEN
 UPDATE SET T.CASES = S.CASES, T.DEATH = S.DEATH, T.RECOVERED = S.RECOVERED, T.UPDATE_TS = CURRENT_TIMESTAMP
 WHEN NOT MATCHED THEN
 INSERT 
@@ -221,7 +233,8 @@ MERGE INTO covid_qualified.TBL_demographics_DE T
 USING
 covid_qualified.VW_demographics_de S
 ON T.state = S.state and T.gender = S.gender and T.age_group = S.age_group
-WHEN MATCHED THEN 
+WHEN MATCHED and datediff(current_date, date(T.UPDATE_TS)) >= getArgument("update_duration_days")
+THEN 
 UPDATE SET T.POPULATION = S.POPULATION, T.UPDATE_TS = CURRENT_TIMESTAMP
 WHEN NOT MATCHED THEN
 INSERT (T.STATE, T.GENDER, T.AGE_GROUP, T.POPULATION, T.INSERT_TS, T.UPDATE_TS) 
@@ -269,7 +282,8 @@ LOCATION '/mnt/kaggle/Covid/Qualified/covid19-global-dataset/worldometer_coronav
 MERGE INTO covid_qualified.TBL_worldometer_coronavirus_daily_data T
 USING covid_qualified.VW_worldometer_coronavirus_daily_data S
 ON T.DATE = S.DATE AND T.COUNTRY = S.COUNTRY
-WHEN MATCHED THEN
+WHEN MATCHED and datediff(current_date, date(T.UPDATE_TS)) >= getArgument("update_duration_days")
+THEN
 UPDATE SET 
 T.CUMULATIVE_TOTAL_CASES = S.CUMULATIVE_TOTAL_CASES,
 T.DAILY_NEW_CASES = S.DAILY_NEW_CASES,
@@ -352,7 +366,8 @@ MERGE INTO covid_qualified.TBL_worldometer_coronavirus_summary_data T
 USING
 covid_qualified.VW_worldometer_coronavirus_summary_data S
 ON T.country = S.country and T.continent = S.continent
-WHEN MATCHED THEN
+WHEN MATCHED AND datediff(current_date, date(T.UPDATE_TS)) >= getArgument("update_duration_days")
+THEN
 UPDATE SET 
 T.total_confirmed = S.total_confirmed,
 T.total_deaths = S.total_deaths,
@@ -392,7 +407,3 @@ S.total_tests_per_lm_population,
 S.population,
 CURRENT_TIMESTAMP,
 CURRENT_TIMESTAMP)
-
--- COMMAND ----------
-
-
