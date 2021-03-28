@@ -151,4 +151,55 @@ CURRENT_TIMESTAMP
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC **Covid_DE**
 
+-- COMMAND ----------
+
+CREATE OR REPLACE VIEW COVID_CURATED.VW_COVID_DE
+AS
+SELECT 
+    c.state,
+    c.country,
+    c.age_group,
+    c.gender,
+    c.date,
+    c.cases,
+    c.death,
+    c.recovered,
+    d.population
+FROM covid_qualified.TBL_covid_de c
+left join
+covid_qualified.TBL_demographics_DE d
+on
+c.state = d.state and c.gender = d.gender and c.age_group = d.age_group
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS COVID_CURATED.TBL_COVID_DE (
+state STRING,
+country STRING,
+age_group STRING,
+gender STRING,
+date DATE,
+cases INTEGER,
+death INTEGER,
+recovered INTEGER,
+population INTEGER,
+INSERT_TS TIMESTAMP,
+UPDATE_TS TIMESTAMP
+)
+USING DELTA
+LOCATION '/mnt/kaggle/Covid/Curated/Covid_DE/'
+
+-- COMMAND ----------
+
+MERGE INTO COVID_CURATED.TBL_COVID_DE T
+USING COVID_CURATED.VW_COVID_DE S
+ON T.state = S.state and T.country = S.country AND T.age_group = S.age_group and T.gender = S.gender and T.date = s.date
+WHEN MATCHED THEN
+UPDATE SET T.CASES = S.CASES, T.DEATH = S.DEATH, T.RECOVERED = S.RECOVERED, T.POPULATION = S.POPULATION, T.UPDATE_TS = CURRENT_TIMESTAMP
+WHEN NOT MATCHED THEN
+INSERT (T.state, T.country, T.age_group, T.gender, T.date, T.cases, T.death, T.recovered, T.population, T.INSERT_TS, T.UPDATE_TS)
+VALUES
+(S.state, S.country, S.age_group, S.gender, S.date, S.cases, S.death, S.recovered, S.population, current_timestamp, current_timestamp)
