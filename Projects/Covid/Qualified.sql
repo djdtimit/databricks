@@ -210,7 +210,7 @@ VALUES
 
 CREATE OR REPLACE VIEW covid_qualified.VW_demographics_de as 
 SELECT state,
-gender,
+CASE WHEN gender = 'female' Then 'F' ELSE 'M' END AS GENDER,
 age_group,
 cast(population as INTEGER) 
 FROM covid_raw.TBL_DEMOGRAPHICS_DE
