@@ -6,33 +6,6 @@ import pandas as pd
 
 # COMMAND ----------
 
-url = 'https://www.worldometers.info/coronavirus/'
-
-# COMMAND ----------
-
-req = requests.get(url)
-bs_obj = BeautifulSoup(req.text, "html.parser")
-
-# COMMAND ----------
-
-bs_obj
-
-# COMMAND ----------
-
-payload = {'code': 'DE'}
-#{'country': 'Germany'} # or 
-URL = 'https://api.statworx.com/covid'
-response = requests.post(url=URL, data=json.dumps(payload))
-
-# Convert to data frame
-df = pd.DataFrame.from_dict(json.loads(response.text))
-
-# COMMAND ----------
-
-df.sort_values(by='date')
-
-# COMMAND ----------
-
 url = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=1=1&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=true&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
 
 # COMMAND ----------
@@ -40,6 +13,31 @@ url = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_CO
 response = requests.get(url)
 response_data = json.loads(response.content)
 covid_counts = response_data['count']
+
+# COMMAND ----------
+
+data = []
+covid_counts = 10
+result_record_count = 5000
+result_offset = 0
+while result_offset < covid_counts:
+   
+  if covid_counts > result_record_count + result_offset:
+
+    url = f'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=1=1&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset={result_offset}&resultRecordCount={result_record_count}&sqlFormat=none&f=pjson&token='
+    response = requests.get(url)
+    response_data = json.loads(response.content)
+    data.extend(response_data['features'])
+    result_offset += result_record_count
+  else: 
+    result_record_count = covid_counts - result_offset
+    url = f'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=1=1&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset={result_offset}&resultRecordCount={result_record_count}&sqlFormat=none&f=pjson&token='
+    response = requests.get(url)
+    response_data = json.loads(response.content)
+    data.extend(response_data['features']) 
+    result_offset += result_record_count
+  print(len(data))
+  
 
 # COMMAND ----------
 
@@ -65,7 +63,3 @@ df = df.withColumn("Altersgruppe", col("attributes").getItem("Altersgruppe")) \
         .withColumn("AnzahlTodesfall", col("attributes").getItem("AnzahlTodesfall")) \
         .withColumn("Geschlecht", col("attributes").getItem("Geschlecht")) \
         .withColumn("IdBundesland", col("attributes").getItem("IdBundesland"))
-
-# COMMAND ----------
-
-df.select('ObjectId').orderBy('ObjectId', ascending=False).show()
