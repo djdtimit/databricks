@@ -1,8 +1,7 @@
 # Databricks notebook source
 import requests
 import json
-# from bs4 import BeautifulSoup
-# import pandas as pd
+import pandas as pd
 from pyspark.sql.functions import col
 from pyspark.sql.types import *
 
@@ -122,4 +121,10 @@ get_RKI_data(url_RKI_Corona_Landkreise, schema_RKI_Corona_Landkreise, save_path_
 
 # COMMAND ----------
 
+url_germany_vaccinations_timeseries_v2 = 'https://impfdashboard.de/static/data/germany_vaccinations_timeseries_v2.tsv'
+url_germany_deliveries_timeseries_v2 = 'https://impfdashboard.de/static/data/germany_deliveries_timeseries_v2.tsv'
+url_germany_vaccinations_by_state_v1 = 'https://impfdashboard.de/static/data/germany_vaccinations_by_state.tsv'
 
+# COMMAND ----------
+
+df = spark.createDataFrame(pd.read_csv(url,sep='\t',header=0))
