@@ -1,65 +1,125 @@
 # Databricks notebook source
 import requests
 import json
-from bs4 import BeautifulSoup
-import pandas as pd
+# from bs4 import BeautifulSoup
+# import pandas as pd
+from pyspark.sql.functions import col
+from pyspark.sql.types import *
 
 # COMMAND ----------
 
-url = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=1=1&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=true&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
-
-# COMMAND ----------
-
-response = requests.get(url)
-response_data = json.loads(response.content)
-covid_counts = response_data['count']
-
-# COMMAND ----------
-
-data = []
-covid_counts = 10
-result_record_count = 5000
-result_offset = 0
-while result_offset < covid_counts:
-   
-  if covid_counts > result_record_count + result_offset:
-
-    url = f'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=1=1&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset={result_offset}&resultRecordCount={result_record_count}&sqlFormat=none&f=pjson&token='
-    response = requests.get(url)
+def get_RKI_data(url, schema, save_path):
+  response = requests.get(url)
+  try:
     response_data = json.loads(response.content)
-    data.extend(response_data['features'])
-    result_offset += result_record_count
-  else: 
-    result_record_count = covid_counts - result_offset
-    url = f'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=1=1&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset={result_offset}&resultRecordCount={result_record_count}&sqlFormat=none&f=pjson&token='
-    response = requests.get(url)
-    response_data = json.loads(response.content)
-    data.extend(response_data['features']) 
-    result_offset += result_record_count
-  print(len(data))
-  
+  except:
+    print('Content is not available')
+  df = spark.createDataFrame(response_data['features'], schema=schema).drop('type')
+  df.write.format('json').mode('overwrite').save(save_path)
 
 # COMMAND ----------
 
-df = spark.createDataFrame(data)
+url_RKI_COVID19 = 'https://opendata.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0.geojson'
+url_RKI_Corona_Landkreise = 'https://opendata.arcgis.com/datasets/917fc37a709542548cc3be077a786c17_0.geojson'
 
 # COMMAND ----------
 
-df = df.withColumn("Altersgruppe", col("attributes").getItem("Altersgruppe")) \
-        .withColumn("Datenstand", col("attributes").getItem("Datenstand")) \
-        .withColumn("AnzahlFall", col("attributes").getItem("AnzahlFall")) \
-        .withColumn("ObjectId", col("attributes").getItem("ObjectId")) \
-        .withColumn("NeuerTodesfall", col("attributes").getItem("NeuerTodesfall")) \
-        .withColumn("Landkreis", col("attributes").getItem("Landkreis")) \
-        .withColumn("Refdatum", col("attributes").getItem("Refdatum")) \
-        .withColumn("NeuGenesen", col("attributes").getItem("NeuGenesen")) \
-        .withColumn("AnzahlGenesen", col("attributes").getItem("AnzahlGenesen")) \
-        .withColumn("Meldedatum", col("attributes").getItem("Meldedatum")) \
-        .withColumn("Bundesland", col("attributes").getItem("Bundesland")) \
-        .withColumn("NeuerFall", col("attributes").getItem("NeuerFall")) \
-        .withColumn("IstErkrankungsbeginn", col("attributes").getItem("IstErkrankungsbeginn")) \
-        .withColumn("IdLandkreis", col("attributes").getItem("IdLandkreis")) \
-        .withColumn("Altersgruppe2", col("attributes").getItem("Altersgruppe2")) \
-        .withColumn("AnzahlTodesfall", col("attributes").getItem("AnzahlTodesfall")) \
-        .withColumn("Geschlecht", col("attributes").getItem("Geschlecht")) \
-        .withColumn("IdBundesland", col("attributes").getItem("IdBundesland"))
+schema_RKI_COVID19 = StructType([
+    StructField("type", StringType(), True),
+    StructField("properties"
+                , StructType([StructField('ObjectId', StringType(), True),
+                              StructField('IdBundesland', StringType(), True),
+                              StructField('Bundesland', StringType(), True),
+                              StructField('Landkreis', StringType(), True),
+                              StructField('Altersgruppe', StringType(), True),
+                              StructField('Geschlecht', StringType(), True),
+                              StructField('AnzahlFall', StringType(), True),
+                              StructField('AnzahlTodesfall', StringType(), True),
+                              StructField('Meldedatum', StringType(), True),
+                              StructField('IdLandkreis', StringType(), True),
+                              StructField('Datenstand', StringType(), True),
+                              StructField('NeuerFall', StringType(), True),
+                              StructField('NeuerTodesfall', StringType(), True),
+                              StructField('Refdatum', StringType(), True),
+                              StructField('NeuGenesen', StringType(), True),
+                              StructField('AnzahlGenesen', StringType(), True),
+                              StructField('IstErkrankungsbeginn', StringType(), True),
+                              StructField('Altersgruppe2', StringType(), True)])
+               )                          
+])
+
+
+schema_RKI_Corona_Landkreise = StructType(
+    [
+    StructField("type", StringType(), True),
+    StructField("properties", StructType([StructField("OBJECTID", StringType(), True),
+        StructField("ADE", StringType(), True),
+        StructField("GF", StringType(), True),
+        StructField("BSG", StringType(), True),
+        StructField("RS", StringType(), True),
+        StructField("AGS", StringType(), True),
+        StructField("SDV_RS", StringType(), True),
+        StructField("GEN", StringType(), True),
+        StructField("BEZ", StringType(), True),
+        StructField("IBZ", StringType(), True),
+        StructField("BEM", StringType(), True),
+        StructField("NBD", StringType(), True),
+        StructField("SN_L", StringType(), True),
+        StructField("SN_R", StringType(), True),
+        StructField("SN_K", StringType(), True),
+        StructField("SN_V1", StringType(), True),
+        StructField("SN_V2", StringType(), True),
+        StructField("SN_G", StringType(), True),
+        StructField("FK_S3", StringType(), True),
+        StructField("NUTS", StringType(), True),
+        StructField("RS_0", StringType(), True),
+        StructField("AGS_0", StringType(), True),
+        StructField("WSK", StringType(), True),
+        StructField("EWZ", StringType(), True),
+        StructField("KFL", StringType(), True),
+        StructField("DEBKG_ID", StringType(), True),
+        StructField("death_rate", StringType(), True),
+        StructField("cases", StringType(), True),
+        StructField("deaths", StringType(), True),
+        StructField("cases_per_100k", StringType(), True),
+        StructField("cases_per_population", StringType(), True),
+        StructField("BL", StringType(), True),
+        StructField("BL_ID", StringType(), True),
+        StructField("county", StringType(), True),
+        StructField("last_update", StringType(), True),
+        StructField("cases7_per_100k", StringType(), True),
+        StructField("recovered", StringType(), True),
+        StructField("EWZ_BL", StringType(), True),
+        StructField("cases7_bl_per_100k", StringType(), True),
+        StructField("cases7_bl", StringType(), True),
+        StructField("death7_bl", StringType(), True),
+        StructField("cases7_lk", StringType(), True),
+        StructField("death7_lk", StringType(), True),
+        StructField("cases7_per_100k_txt", StringType(), True),
+        StructField("AdmUnitId", StringType(), True),
+        StructField("SHAPE_Length", StringType(), True),
+        StructField("SHAPE_Area", StringType(), True)
+    ]
+)
+),
+StructField("geometry", StructType([StructField("Type", StringType(), True) , StructField('coordinates', ArrayType(StringType()), True)
+                                   ]) )
+]
+)
+
+# COMMAND ----------
+
+save_path_RKI_COVID19 = 'mnt/kaggle/Covid/Ingestion/RKI_COVID19/'
+save_path_RKI_Corona_Landkreise = 'mnt/kaggle/Covid/Ingestion/RKI_Corona_Landkreise/'
+
+# COMMAND ----------
+
+get_RKI_data('https://opendata.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0.geojson', schema, 'mnt/kaggle/Covid/Ingestion/RKI_COVID19/')
+
+# COMMAND ----------
+
+get_RKI_data(url_RKI_Corona_Landkreise, schema_RKI_Corona_Landkreise, save_path_RKI_Corona_Landkreise)
+
+# COMMAND ----------
+
+
