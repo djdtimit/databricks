@@ -81,14 +81,26 @@ save_path_germany_vaccinations_by_state_v1 = '/mnt/kaggle/Covid/Ingestion/german
 # COMMAND ----------
 
 df = spark.createDataFrame(pd.read_csv(url_germany_vaccinations_timeseries_v2,sep='\t',header=0))
-df.write.format('csv').option('sep', ';').mode('overwrite').save(save_path_germany_vaccinations_timeseries_v2)
+df.write.format('csv').option('sep', ';').option('header', True).mode('overwrite').save(save_path_germany_vaccinations_timeseries_v2)
 
 # COMMAND ----------
 
 df = spark.createDataFrame(pd.read_csv(url_germany_deliveries_timeseries_v2,sep='\t',header=0))
-df.write.format('csv').option('sep', ';').mode('overwrite').save(save_path_germany_deliveries_timeseries_v2)
+df.write.format('csv').option('sep', ';').option('header', True).mode('overwrite').save(save_path_germany_deliveries_timeseries_v2)
 
 # COMMAND ----------
 
 df = spark.createDataFrame(pd.read_csv(url_germany_vaccinations_by_state_v1,sep='\t',header=0))
-df.write.format('csv').option('sep', ';').mode('overwrite').save(save_path_germany_vaccinations_by_state_v1)
+df.write.format('csv').option('sep', ';').option('header', True).mode('overwrite').save(save_path_germany_vaccinations_by_state_v1)
+
+# COMMAND ----------
+
+df = spark.read.csv(os.path.join(save_path_germany_vaccinations_by_state_v1, '*.csv'),sep = ';', header= True)
+
+# COMMAND ----------
+
+display(df.)
+
+# COMMAND ----------
+
+
