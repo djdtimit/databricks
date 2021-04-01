@@ -20,6 +20,11 @@ def get_RKI_data(url, schema, save_path):
 
 url_RKI_COVID19 = 'https://opendata.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0.geojson'
 url_RKI_Corona_Landkreise = 'https://opendata.arcgis.com/datasets/917fc37a709542548cc3be077a786c17_0.geojson'
+url_RKI_Corona_Bundeslaender = 'https://opendata.arcgis.com/datasets/ef4b445a53c1406892257fe63129a8ea_0.geojson'
+url_RKI_Data_Status = 'https://opendata.arcgis.com/datasets/3a12c19fb209431e85dda38f59aa16ba_0.geojson'
+url_RKI_Altersgruppen = 'https://opendata.arcgis.com/datasets/23b1ccb051f543a5b526021275c1c6e5_0.geojson'
+url_RKI_key_data = 'https://opendata.arcgis.com/datasets/c2f3c3b935a242169c6bec82e1fa573e_0.geojson'
+url_RKI_history = 'https://opendata.arcgis.com/datasets/6d78eb3b86ad4466a8e264aa2e32a2e4_0.geojson'
 
 # COMMAND ----------
 
@@ -127,4 +132,28 @@ url_germany_vaccinations_by_state_v1 = 'https://impfdashboard.de/static/data/ger
 
 # COMMAND ----------
 
-df = spark.createDataFrame(pd.read_csv(url,sep='\t',header=0))
+save_path_germany_vaccinations_timeseries_v2 = 'mnt/kaggle/Covid/Ingestion/germany_vaccinations_timeseries_v2/'
+save_path_germany_deliveries_timeseries_v2 = 'mnt/kaggle/Covid/Ingestion/germany_deliveries_timeseries_v2/'
+save_path_germany_vaccinations_by_state_v1 = 'mnt/kaggle/Covid/Ingestion/germany_vaccinations_by_state_v1/'
+
+# COMMAND ----------
+
+df = spark.createDataFrame(pd.read_csv(url_germany_vaccinations_timeseries_v2,sep='\t',header=0))
+
+# COMMAND ----------
+
+df.write.format('csv').option('sep', ';').mode('overwrite').save(save_path_germany_vaccinations_timeseries_v2)
+
+# COMMAND ----------
+
+df = spark.createDataFrame(pd.read_csv(url_germany_deliveries_timeseries_v2,sep='\t',header=0))
+df.write.format('csv').option('sep', ';').mode('overwrite').save(save_path_germany_deliveries_timeseries_v2)
+
+# COMMAND ----------
+
+df = spark.createDataFrame(pd.read_csv(url_germany_vaccinations_by_state_v1,sep='\t',header=0))
+df.write.format('csv').option('sep', ';').mode('overwrite').save(save_path_germany_vaccinations_by_state_v1)
+
+# COMMAND ----------
+
+
