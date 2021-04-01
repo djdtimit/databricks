@@ -1,20 +1,18 @@
 # Databricks notebook source
-import requests
-import json
 import pandas as pd
-from pyspark.sql.functions import col
-from pyspark.sql.types import *
+import urllib
+import os
 
 # COMMAND ----------
 
-def get_RKI_data(url, schema, save_path):
-  response = requests.get(url)
-  try:
-    response_data = json.loads(response.content)
-  except:
-    print('Content is not available')
-  df = spark.createDataFrame(response_data['features'], schema=schema).drop('type')
-  df.write.format('json').mode('overwrite').save(save_path)
+def get_rki_data(url, mnt_path, file_name):
+  if not os.path.isdir(mnt_path):
+    os.makedirs(mnt_path)
+  target_path = os.path.join('/dbfs', mnt_path, file_name)
+  urllib.request.urlretrieve(url, target_path)
+  print('source: ', url)
+  print('target: ', target_path)
+
 
 # COMMAND ----------
 
@@ -28,101 +26,33 @@ url_RKI_history = 'https://opendata.arcgis.com/datasets/6d78eb3b86ad4466a8e264aa
 
 # COMMAND ----------
 
-schema_RKI_COVID19 = StructType([
-    StructField("type", StringType(), True),
-    StructField("properties"
-                , StructType([StructField('ObjectId', StringType(), True),
-                              StructField('IdBundesland', StringType(), True),
-                              StructField('Bundesland', StringType(), True),
-                              StructField('Landkreis', StringType(), True),
-                              StructField('Altersgruppe', StringType(), True),
-                              StructField('Geschlecht', StringType(), True),
-                              StructField('AnzahlFall', StringType(), True),
-                              StructField('AnzahlTodesfall', StringType(), True),
-                              StructField('Meldedatum', StringType(), True),
-                              StructField('IdLandkreis', StringType(), True),
-                              StructField('Datenstand', StringType(), True),
-                              StructField('NeuerFall', StringType(), True),
-                              StructField('NeuerTodesfall', StringType(), True),
-                              StructField('Refdatum', StringType(), True),
-                              StructField('NeuGenesen', StringType(), True),
-                              StructField('AnzahlGenesen', StringType(), True),
-                              StructField('IstErkrankungsbeginn', StringType(), True),
-                              StructField('Altersgruppe2', StringType(), True)])
-               )                          
-])
-
-
-schema_RKI_Corona_Landkreise = StructType(
-    [
-    StructField("type", StringType(), True),
-    StructField("properties", StructType([StructField("OBJECTID", StringType(), True),
-        StructField("ADE", StringType(), True),
-        StructField("GF", StringType(), True),
-        StructField("BSG", StringType(), True),
-        StructField("RS", StringType(), True),
-        StructField("AGS", StringType(), True),
-        StructField("SDV_RS", StringType(), True),
-        StructField("GEN", StringType(), True),
-        StructField("BEZ", StringType(), True),
-        StructField("IBZ", StringType(), True),
-        StructField("BEM", StringType(), True),
-        StructField("NBD", StringType(), True),
-        StructField("SN_L", StringType(), True),
-        StructField("SN_R", StringType(), True),
-        StructField("SN_K", StringType(), True),
-        StructField("SN_V1", StringType(), True),
-        StructField("SN_V2", StringType(), True),
-        StructField("SN_G", StringType(), True),
-        StructField("FK_S3", StringType(), True),
-        StructField("NUTS", StringType(), True),
-        StructField("RS_0", StringType(), True),
-        StructField("AGS_0", StringType(), True),
-        StructField("WSK", StringType(), True),
-        StructField("EWZ", StringType(), True),
-        StructField("KFL", StringType(), True),
-        StructField("DEBKG_ID", StringType(), True),
-        StructField("death_rate", StringType(), True),
-        StructField("cases", StringType(), True),
-        StructField("deaths", StringType(), True),
-        StructField("cases_per_100k", StringType(), True),
-        StructField("cases_per_population", StringType(), True),
-        StructField("BL", StringType(), True),
-        StructField("BL_ID", StringType(), True),
-        StructField("county", StringType(), True),
-        StructField("last_update", StringType(), True),
-        StructField("cases7_per_100k", StringType(), True),
-        StructField("recovered", StringType(), True),
-        StructField("EWZ_BL", StringType(), True),
-        StructField("cases7_bl_per_100k", StringType(), True),
-        StructField("cases7_bl", StringType(), True),
-        StructField("death7_bl", StringType(), True),
-        StructField("cases7_lk", StringType(), True),
-        StructField("death7_lk", StringType(), True),
-        StructField("cases7_per_100k_txt", StringType(), True),
-        StructField("AdmUnitId", StringType(), True),
-        StructField("SHAPE_Length", StringType(), True),
-        StructField("SHAPE_Area", StringType(), True)
-    ]
-)
-),
-StructField("geometry", StructType([StructField("Type", StringType(), True) , StructField('coordinates', ArrayType(StringType()), True)
-                                   ]) )
-]
-)
+save_path_RKI_COVID19 = '/mnt/kaggle/Covid/Ingestion/RKI_COVID19/'
+save_path_RKI_Corona_Landkreise = '/mnt/kaggle/Covid/Ingestion/RKI_Corona_Landkreise/'
+save_path_RKI_Corona_Bundeslaender = '/mnt/kaggle/Covid/Ingestion/RKI_Corona_Bundeslaender/'
+save_path_RKI_Data_Status = '/mnt/kaggle/Covid/Ingestion/RKI_Data_Status/'
+save_path_RKI_Altersgruppen = '/mnt/kaggle/Covid/Ingestion/RKI_Altersgruppen/'
+save_path_RKI_key_data = '/mnt/kaggle/Covid/Ingestion/RKI_key_data/'
+save_path_RKI_history = '/mnt/kaggle/Covid/Ingestion/RKI_history/'
 
 # COMMAND ----------
 
-save_path_RKI_COVID19 = 'mnt/kaggle/Covid/Ingestion/RKI_COVID19/'
-save_path_RKI_Corona_Landkreise = 'mnt/kaggle/Covid/Ingestion/RKI_Corona_Landkreise/'
+file_name_RKI_COVID19 = 'RKI_COVID19.json'
+file_name_RKI_Corona_Landkreise = 'RKI_Corona_Landkreise.json'
+file_name_RKI_Corona_Bundeslaender = 'RKI_Corona_Bundeslaender.json'
+file_name_RKI_Data_Status = 'RKI_Data_Status.json'
+file_name_RKI_Altersgruppen = 'RKI_Altersgruppen.json'
+file_name_RKI_key_data = 'RKI_key_data.json'
+file_name_RKI_history = 'RKI_history.json'
 
 # COMMAND ----------
 
-get_RKI_data('https://opendata.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0.geojson', schema, 'mnt/kaggle/Covid/Ingestion/RKI_COVID19/')
-
-# COMMAND ----------
-
-get_RKI_data(url_RKI_Corona_Landkreise, schema_RKI_Corona_Landkreise, save_path_RKI_Corona_Landkreise)
+get_rki_data(url_RKI_COVID19, save_path_RKI_COVID19, file_name_RKI_COVID19)
+get_rki_data(url_RKI_Corona_Landkreise, save_path_RKI_Corona_Landkreise, file_name_RKI_Corona_Landkreise)
+get_rki_data(url_RKI_Corona_Bundeslaender, save_path_RKI_Corona_Bundeslaender, file_name_RKI_Corona_Bundeslaender)
+get_rki_data(url_RKI_Data_Status, save_path_RKI_Data_Status, file_name_RKI_Data_Status)
+get_rki_data(url_RKI_Altersgruppen, save_path_RKI_Altersgruppen, file_name_RKI_Altersgruppen)
+get_rki_data(url_RKI_key_data, save_path_RKI_key_data, file_name_RKI_key_data)
+get_rki_data(url_RKI_history, save_path_RKI_history, file_name_RKI_history)
 
 # COMMAND ----------
 
@@ -132,16 +62,25 @@ url_germany_vaccinations_by_state_v1 = 'https://impfdashboard.de/static/data/ger
 
 # COMMAND ----------
 
-save_path_germany_vaccinations_timeseries_v2 = 'mnt/kaggle/Covid/Ingestion/germany_vaccinations_timeseries_v2/'
-save_path_germany_deliveries_timeseries_v2 = 'mnt/kaggle/Covid/Ingestion/germany_deliveries_timeseries_v2/'
-save_path_germany_vaccinations_by_state_v1 = 'mnt/kaggle/Covid/Ingestion/germany_vaccinations_by_state_v1/'
+save_path_germany_vaccinations_timeseries_v2 = '/mnt/kaggle/Covid/Ingestion/germany_vaccinations_timeseries_v2/'
+save_path_germany_deliveries_timeseries_v2 = '/mnt/kaggle/Covid/Ingestion/germany_deliveries_timeseries_v2/'
+save_path_germany_vaccinations_by_state_v1 = '/mnt/kaggle/Covid/Ingestion/germany_vaccinations_by_state_v1/'
+
+# COMMAND ----------
+
+# file_name_vaccinations_timeseries_v2 = 'germany_vaccinations_timeseries_v2.tsv'
+# file_name_deliveries_timeseries_v2 = 'germany_deliveries_timeseries_v2.tsv'
+# file_name_vaccinations_by_state_v1 = 'germany_vaccinations_by_state.tsv'
+
+# COMMAND ----------
+
+# get_rki_data(url_germany_vaccinations_timeseries_v2, save_path_germany_vaccinations_timeseries_v2, file_name_vaccinations_timeseries_v2)
+# get_rki_data(url_germany_deliveries_timeseries_v2, save_path_germany_deliveries_timeseries_v2, file_name_deliveries_timeseries_v2)
+# get_rki_data(url_germany_vaccinations_by_state_v1, save_path_germany_vaccinations_by_state_v1, file_name_vaccinations_by_state_v1)
 
 # COMMAND ----------
 
 df = spark.createDataFrame(pd.read_csv(url_germany_vaccinations_timeseries_v2,sep='\t',header=0))
-
-# COMMAND ----------
-
 df.write.format('csv').option('sep', ';').mode('overwrite').save(save_path_germany_vaccinations_timeseries_v2)
 
 # COMMAND ----------
@@ -153,7 +92,3 @@ df.write.format('csv').option('sep', ';').mode('overwrite').save(save_path_germa
 
 df = spark.createDataFrame(pd.read_csv(url_germany_vaccinations_by_state_v1,sep='\t',header=0))
 df.write.format('csv').option('sep', ';').mode('overwrite').save(save_path_germany_vaccinations_by_state_v1)
-
-# COMMAND ----------
-
-
