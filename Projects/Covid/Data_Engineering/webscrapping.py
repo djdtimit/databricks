@@ -2,6 +2,10 @@
 import pandas as pd
 import urllib
 import os
+import requests
+import re
+from pyspark.sql.functions import *
+import databricks.koalas as ks
 
 # COMMAND ----------
 
@@ -100,6 +104,94 @@ df = spark.read.csv(os.path.join(save_path_germany_vaccinations_by_state_v1, '*.
 # COMMAND ----------
 
 display(df.)
+
+# COMMAND ----------
+
+df = spark.read.json(os.path.join(save_path_RKI_COVID19, file_name_RKI_COVID19)).where('properties is not null')
+
+# COMMAND ----------
+
+display(df)
+
+# COMMAND ----------
+
+from pyspark.sql.functions import to_date, col
+from pyspark.sql.types import *
+
+# COMMAND ----------
+
+df_covid = df.select(to_date('properties.Meldedatum').alias('date'), col('properties.AnzahlFall').cast(IntegerType()).alias('Anzahl_Fall'))
+
+# COMMAND ----------
+
+display(df_covid.groupby('date').agg(sum('Anzahl_Fall')))#.orderby('date'))
+
+# COMMAND ----------
+
+display(df_covid.orderBy('date'))
+
+# COMMAND ----------
+
+df_covid.select(sum('Anzahl_Fall'))
+
+# COMMAND ----------
+
+url = 'https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_daily_reports/'
+r = requests.get(url)
+
+# COMMAND ----------
+
+html_doc = r.text
+
+# COMMAND ----------
+
+x = re.findall('[^(=")]*?csv', html_doc)
+
+# COMMAND ----------
+
+def fun(variable):
+  if any((c in chars) for c in variable):
+    return False
+  else:
+    return True
+
+# COMMAND ----------
+
+filtered = filter(fun, x)
+
+# COMMAND ----------
+
+save_path_csse_covid_19_daily_reports = '/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/'
+
+# COMMAND ----------
+
+counter = 0
+for csv_file in csv_files:
+  file_url = os.path.join(url.replace('github.com','raw.githubusercontent.com').replace('tree', ''), csv_file)
+  
+  df_csv_file = pd.read_csv(file_url,sep=',',header=0)
+  df_csv_file['file_name'] = csv_file
+  print('Progress: ', counter / len(csv_files) * 100,'%')
+  counter += 1
+  
+  df = spark.createDataFrame(df_csv_file)
+  df.write.format('csv').option('sep', ',').option('header', True).mode('append').save(save_path_csse_covid_19_daily_reports)
+
+# COMMAND ----------
+
+df_spark = ks.read_csv(save_path_csse_covid_19_daily_reports, header = 0)
+
+# COMMAND ----------
+
+df_spark['date'] = df_spark['file_name'].str.split('.').str.get(0)
+
+# COMMAND ----------
+
+display(df_spark)
+
+# COMMAND ----------
+
+div = BeautifulSoup.find_all(html_doc,'<a')
 
 # COMMAND ----------
 
