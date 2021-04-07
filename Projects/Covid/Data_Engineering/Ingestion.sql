@@ -110,3 +110,224 @@ POPULATION STRING)
 USING CSV
 OPTIONS ("header" True)
 LOCATION "/mnt/kaggle/Covid/Ingestion/covid19-global-dataset/worldometer_coronavirus_summary_data.csv"
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **csse_covid_19_daily_reports**
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_ingestion.TBL_csse_covid_19_daily_reports (
+FIPS STRING,
+Admin2 STRING,
+Province_State STRING,
+Country_Region STRING,
+Last_Update STRING,
+Lat STRING,
+Long_ STRING,
+Confirmed STRING,
+Deaths STRING,
+Recovered STRING,
+Active STRING,
+Combined_Key STRING,
+Incident_Rate STRING,
+Case_Fatality_Ratio STRING,
+file_name STRING
+)
+USING CSV
+OPTIONS ("header" True)
+LOCATION "/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/*.csv"
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **germany_vaccinations_timeseries_v2**
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_ingestion.TBL_germany_vaccinations_timeseries_v2 (
+date STRING,
+dosen_kumulativ STRING,
+dosen_differenz_zum_vortag STRING,
+dosen_erst_differenz_zum_vortag STRING,
+dosen_zweit_differenz_zum_vortag STRING,
+dosen_biontech_kumulativ STRING,
+dosen_moderna_kumulativ STRING,
+dosen_astrazeneca_kumulativ STRING,
+personen_erst_kumulativ STRING,
+personen_voll_kumulativ STRING,
+impf_quote_erst STRING,
+impf_quote_voll STRING,
+indikation_alter_dosen STRING,
+indikation_beruf_dosen STRING,
+indikation_medizinisch_dosen STRING,
+indikation_pflegeheim_dosen STRING,
+indikation_alter_erst STRING,
+indikation_beruf_erst STRING,
+indikation_medizinisch_erst STRING,
+indikation_pflegeheim_erst STRING,
+indikation_alter_voll STRING,
+indikation_beruf_voll STRING,
+indikation_medizinisch_voll STRING,
+indikation_pflegeheim_voll STRING
+
+)
+USING CSV
+OPTIONS ("header" True, "sep" ";")
+LOCATION "/mnt/kaggle/Covid/Ingestion/germany_vaccinations_timeseries_v2/*.csv"
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **germany_deliveries_timeseries_v2**
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_ingestion.TBL_germany_deliveries_timeseries_v2 (
+date STRING,
+impfstoff STRING, 
+region STRING, 
+dosen STRING
+)
+USING CSV
+OPTIONS ("header" True, "sep" ";")
+LOCATION 
+'/mnt/kaggle/Covid/Ingestion/germany_deliveries_timeseries_v2/*.csv'
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **germany_vaccinations_by_state_v1**
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_ingestion.TBL_germany_vaccinations_by_state_v1 (
+code STRING,
+vaccinationsTotal STRING,
+peopleFirstTotal STRING,
+peopleFullTotal STRING
+)
+USING CSV
+OPTIONS ("header" True, "sep" ";")
+LOCATION 
+'/mnt/kaggle/Covid/Ingestion/germany_vaccinations_by_state_v1/'
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_Altersgruppen**
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_ingestion.TBL_RKI_Altersgruppen (
+_corrupt_record STRING,
+geometry STRING,
+properties STRING,
+type STRING
+)
+USING json
+LOCATION 
+'/mnt/kaggle/Covid/Ingestion/RKI_Altersgruppen/'
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_COVID19**
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_ingestion.TBL_RKI_COVID19 (
+_corrupt_record STRING,
+geometry STRING,
+properties STRING,
+type STRING
+)
+USING json
+LOCATION 
+'/mnt/kaggle/Covid/Ingestion/RKI_COVID19/'
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_Corona_Landkreise**
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_ingestion.TBL_RKI_Corona_Landkreise (
+_corrupt_record STRING,
+geometry STRING,
+properties STRING,
+type STRING
+)
+USING json
+LOCATION 
+'/mnt/kaggle/Covid/Ingestion/RKI_Corona_Landkreise/'
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_Corona_Bundeslaender**
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_ingestion.TBL_RKI_Corona_Bundeslaender (
+_corrupt_record STRING,
+geometry STRING,
+properties STRING,
+type STRING
+)
+USING json
+LOCATION 
+'/mnt/kaggle/Covid/Ingestion/RKI_Corona_Bundeslaender/'
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_Data_Status**
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_ingestion.TBL_RKI_Data_Status (
+_corrupt_record STRING,
+geometry STRING,
+properties STRING,
+type STRING
+)
+USING json
+LOCATION 
+'/mnt/kaggle/Covid/Ingestion/RKI_Data_Status/'
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_key_data**
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_ingestion.TBL_RKI_key_data (
+_corrupt_record STRING,
+geometry STRING,
+properties STRING,
+type STRING
+)
+USING json
+LOCATION 
+'/mnt/kaggle/Covid/Ingestion/RKI_key_data/'
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_history**
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_ingestion.TBL_RKI_history (
+_corrupt_record STRING,
+geometry STRING,
+properties STRING,
+type STRING
+)
+USING json
+LOCATION 
+'/mnt/kaggle/Covid/Ingestion/RKI_history/'

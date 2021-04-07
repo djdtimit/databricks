@@ -453,3 +453,57 @@ UPDATE covid_raw.TBL_COUNTRY_MAPPING SET target_country_name = 'Saint Vincent an
 -- COMMAND ----------
 
 OPTIMIZE covid_raw.TBL_COUNTRY_MAPPING
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **csse_covid_19_daily_reports**
+
+-- COMMAND ----------
+
+CREATE OR REPLACE VIEW COVID_RAW.VW_csse_covid_19_daily_reports 
+AS 
+SELECT
+FIPS,
+Admin2,
+Province_State,
+Country_Region,
+Last_Update,
+Lat,
+Long_,
+Confirmed,
+Deaths,
+Recovered,
+Active,
+Combined_Key,
+Incident_Rate,
+Case_Fatality_Ratio,
+file_name
+
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_raw.TBL_csse_covid_19_daily_reports (
+FIPS STRING,
+Admin2 STRING,
+Province_State STRING,
+Country_Region STRING,
+Last_Update STRING,
+Lat STRING,
+Long_ STRING,
+Confirmed STRING,
+Deaths STRING,
+Recovered STRING,
+Active STRING,
+Combined_Key STRING,
+Incident_Rate STRING,
+Case_Fatality_Ratio STRING,
+file_name STRING,
+INSERT_TS STRING,
+UPDATE_TS STRING
+)
+USING DELTA LOCATION '/mnt/kaggle/Covid/Raw/csse_covid_19_daily_reports/'
+
+-- COMMAND ----------
+
+MERGE 
