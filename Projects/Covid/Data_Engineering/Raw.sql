@@ -478,8 +478,10 @@ Active,
 Combined_Key,
 Incident_Rate,
 Case_Fatality_Ratio,
-file_name
-
+file_name,
+INPUT_FILE_NAME() AS SOURCE
+FROM
+covid_ingestion.TBL_csse_covid_19_daily_reports
 
 -- COMMAND ----------
 
@@ -499,6 +501,7 @@ Combined_Key STRING,
 Incident_Rate STRING,
 Case_Fatality_Ratio STRING,
 file_name STRING,
+SOURCE STRING,
 INSERT_TS STRING,
 UPDATE_TS STRING
 )
@@ -506,4 +509,364 @@ USING DELTA LOCATION '/mnt/kaggle/Covid/Raw/csse_covid_19_daily_reports/'
 
 -- COMMAND ----------
 
-MERGE 
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **germany_vaccinations_timeseries_v2**
+
+-- COMMAND ----------
+
+CREATE OR REPLACE VIEW COVID_RAW.VW_GERMANY_VACCINATIONS_TIMESERIES_V2 AS
+SELECT 
+date,
+dosen_kumulativ,
+dosen_differenz_zum_vortag,
+dosen_erst_differenz_zum_vortag,
+dosen_zweit_differenz_zum_vortag,
+dosen_biontech_kumulativ,
+dosen_moderna_kumulativ,
+dosen_astrazeneca_kumulativ,
+personen_erst_kumulativ,
+personen_voll_kumulativ,
+impf_quote_erst,
+impf_quote_voll,
+indikation_alter_dosen,
+indikation_beruf_dosen,
+indikation_medizinisch_dosen,
+indikation_pflegeheim_dosen,
+indikation_alter_erst,
+indikation_beruf_erst,
+indikation_medizinisch_erst,
+indikation_pflegeheim_erst,
+indikation_alter_voll,
+indikation_beruf_voll,
+indikation_medizinisch_voll,
+indikation_pflegeheim_voll,
+INPUT_FILE_NAME() AS SOURCE
+FROM
+covid_ingestion.TBL_germany_vaccinations_timeseries_v2
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_GERMANY_VACCINATIONS_TIMESERIES_V2 (
+date STRING,
+dosen_kumulativ STRING,
+dosen_differenz_zum_vortag STRING,
+dosen_erst_differenz_zum_vortag STRING,
+dosen_zweit_differenz_zum_vortag STRING,
+dosen_biontech_kumulativ STRING,
+dosen_moderna_kumulativ STRING,
+dosen_astrazeneca_kumulativ STRING,
+personen_erst_kumulativ STRING,
+personen_voll_kumulativ STRING,
+impf_quote_erst STRING,
+impf_quote_voll STRING,
+indikation_alter_dosen STRING,
+indikation_beruf_dosen STRING,
+indikation_medizinisch_dosen STRING,
+indikation_pflegeheim_dosen STRING,
+indikation_alter_erst STRING,
+indikation_beruf_erst STRING,
+indikation_medizinisch_erst STRING,
+indikation_pflegeheim_erst STRING,
+indikation_alter_voll STRING,
+indikation_beruf_voll STRING,
+indikation_medizinisch_voll STRING,
+indikation_pflegeheim_voll STRING,
+SOURCE STRING
+)
+USING DELTA
+LOCATION '/mnt/kaggle/Covid/Raw/germany_vaccinations_timeseries_v2/'
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **germany_deliveries_timeseries_v2**
+
+-- COMMAND ----------
+
+CREATE OR REPLACE VIEW COVID_RAW.VW_GERMANY_DELIVERIES_TIMESERIES_V2 AS
+SELECT 
+date,
+impfstoff, 
+region, 
+dosen,
+INPUT_FiLE_NAME() AS SOURCE
+FROM covid_ingestion.TBL_germany_deliveries_timeseries_v2
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_GERMANY_DELIVERIES_TIMESERIES_V2 (
+date STRING,
+impfstoff STRING, 
+region STRING, 
+dosen STRING,
+SOURCE STRING
+)
+USING DELTA
+LOCATION '/mnt/kaggle/Covid/Raw/GERMANY_DELIVERIES_TIMESERIES_V2/'
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **germany_vaccinations_by_state_v1**
+
+-- COMMAND ----------
+
+CREATE OR REPLACE VIEW COVID_RAW.VW_GERMANY_VACCINATIONS_BY_STATE_V1 AS
+SELECT
+code,
+vaccinationsTotal,
+peopleFirstTotal,
+peopleFullTotal,
+INPUT_FILE_NAME() AS SOURCE
+FROM covid_ingestion.TBL_germany_vaccinations_by_state_v1
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_GERMANY_VACCINATIONS_BY_STATE_V1 (
+code STRING,
+vaccinationsTotal STRING,
+peopleFirstTotal STRING,
+peopleFullTotal STRING,
+SOURCE STRING
+)
+USING DELTA
+LOCATION '/mnt/kaggle/Covid/Raw/germany_vaccinations_by_state_v1/'
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_Altersgruppen**
+
+-- COMMAND ----------
+
+CREATE OR REPLACE VIEW COVID_RAW.VW_RKI_ALTERSGRUPPEN AS
+SELECT
+_corrupt_record,
+geometry,
+properties,
+type,
+INPUT_FILE_NAME() AS SOURCE
+FROM covid_ingestion.TBL_RKI_Altersgruppen
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_ALTERSGRUPPEN (
+_corrupt_record STRING,
+geometry STRING,
+properties STRING,
+type STRING,
+source STRING
+)
+USING DELTA
+LOCATION '/mnt/kaggle/Covid/Raw/RKI_Altersgruppen/'
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_COVID19**
+
+-- COMMAND ----------
+
+CREATE OR REPLACE VIEW COVID_RAW.VW_RKI_COVID19 AS 
+SELECT
+_corrupt_record,
+geometry,
+properties,
+type,
+INPUT_FILE_NAME() AS SOURCE
+FROM covid_ingestion.TBL_RKI_COVID19
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_COVID19 (
+_corrupt_record STRING,
+geometry STRING,
+properties STRING,
+type STRING,
+SOURCE STRING)
+USING DELTA
+LOCATION '/mnt/kaggle/Raw/Ingestion/RKI_COVID19/'
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_Corona_Landkreise**
+
+-- COMMAND ----------
+
+CREATE OR REPLACE VIEW COVID_RAW.VW_RKI_CORONA_LANDKREISE AS 
+SELECT 
+_corrupt_record,
+geometry,
+properties,
+type,
+INPUT_FILE_NAME() AS SOURCE
+FROM covid_ingestion.TBL_RKI_CORONA_LANDKREISE
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_CORONA_LANDKREISE (
+_corrupt_record STRING,
+geometry STRING,
+properties STRING,
+type STRING,
+SOURCE STRING
+)
+USING DELTA
+LOCATION '/mnt/kaggle/Covid/Raw/RKI_Corona_Landkreise/'
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_Corona_Bundeslaender**
+
+-- COMMAND ----------
+
+CREATE OR REPLACE VIEW COVID_RAW.VW_RKI_CORONA_BUNDESLAENDER AS 
+SELECT 
+_corrupt_record,
+geometry,
+properties,
+type,
+INPUT_FILE_NAME() AS SOURCE
+FROM covid_ingestion.TBL_RKI_CORONA_BUNDESLAENDER
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_CORONA_BUNDESLAENDER (
+_corrupt_record STRING,
+geometry STRING,
+properties STRING,
+type STRING,
+SOURCE STRING
+)
+USING DELTA
+LOCATION '/mnt/kaggle/Covid/Raw/RKI_Corona_Bundeslaender/'
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_Data_Status**
+
+-- COMMAND ----------
+
+CREATE OR REPLACE VIEW COVID_RAW.VW_RKI_DATA_STATUS AS 
+SELECT 
+_corrupt_record,
+geometry,
+properties,
+type,
+INPUT_FILE_NAME() AS SOURCE
+FROM covid_ingestion.TBL_RKI_DATA_STATUS
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_DATA_STATUS (
+_corrupt_record STRING,
+geometry STRING,
+properties STRING,
+type STRING,
+SOURCE STRING
+)
+USING DELTA
+LOCATION '/mnt/kaggle/Covid/Raw/RKI_Data_Status/'
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_key_data**
+
+-- COMMAND ----------
+
+CREATE OR REPLACE VIEW COVID_RAW.VW_RKI_KEY_DATA AS 
+SELECT 
+_corrupt_record,
+geometry,
+properties,
+type,
+INPUT_FILE_NAME() AS SOURCE
+FROM covid_ingestion.TBL_RKI_KEY_DATA
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_KEY_DATA (
+_corrupt_record STRING,
+geometry STRING,
+properties STRING,
+type STRING,
+SOURCE STRING
+)
+USING DELTA
+LOCATION '/mnt/kaggle/Covid/Raw/RKI_Key_Data/'
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_history**
+
+-- COMMAND ----------
+
+CREATE OR REPLACE VIEW COVID_RAW.VW_RKI_HISTORY AS 
+SELECT 
+_corrupt_record,
+geometry,
+properties,
+type,
+INPUT_FILE_NAME() AS SOURCE
+FROM covid_ingestion.TBL_RKI_HISTORY
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_HISTORY (
+_corrupt_record STRING,
+geometry STRING,
+properties STRING,
+type STRING,
+SOURCE STRING
+)
+USING DELTA
+LOCATION '/mnt/kaggle/Covid/Raw/RKI_History/'
+
+-- COMMAND ----------
+
+
