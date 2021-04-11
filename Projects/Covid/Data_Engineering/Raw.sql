@@ -509,7 +509,14 @@ USING DELTA LOCATION '/mnt/kaggle/Covid/Raw/csse_covid_19_daily_reports/'
 
 -- COMMAND ----------
 
+MERGE INTO 
+covid_raw.TBL_csse_covid_19_daily_reports AS T 
+USING 
+COVID_RAW.VW_csse_covid_19_daily_reports AS S
 
+-- COMMAND ----------
+
+SELECT * FROM COVID_RAW.VW_csse_covid_19_daily_reports
 
 -- COMMAND ----------
 
@@ -582,6 +589,65 @@ LOCATION '/mnt/kaggle/Covid/Raw/germany_vaccinations_timeseries_v2/'
 
 -- COMMAND ----------
 
+MERGE INTO 
+COVID_RAW.TBL_GERMANY_VACCINATIONS_TIMESERIES_V2 AS T 
+USING 
+COVID_RAW.VW_GERMANY_VACCINATIONS_TIMESERIES_V2 AS S
+ON
+T.DATE = S.DATE
+WHEN NOT MATCHED
+THEN INSERT (
+T.date,
+T.dosen_kumulativ,
+T.dosen_differenz_zum_vortag,
+T.dosen_erst_differenz_zum_vortag,
+T.dosen_zweit_differenz_zum_vortag,
+T.dosen_biontech_kumulativ,
+T.dosen_moderna_kumulativ,
+T.dosen_astrazeneca_kumulativ,
+T.personen_erst_kumulativ,
+T.personen_voll_kumulativ,
+T.impf_quote_erst,
+T.impf_quote_voll,
+T.indikation_alter_dosen,
+T.indikation_beruf_dosen,
+T.indikation_medizinisch_dosen,
+T.indikation_pflegeheim_dosen,
+T.indikation_alter_erst,
+T.indikation_beruf_erst,
+T.indikation_medizinisch_erst,
+T.indikation_pflegeheim_erst,
+T.indikation_alter_voll,
+T.indikation_beruf_voll,
+T.indikation_medizinisch_voll,
+T.indikation_pflegeheim_voll,
+T.SOURCE)
+VALUES (
+S.date,
+S.dosen_kumulativ,
+S.dosen_differenz_zum_vortag,
+S.dosen_erst_differenz_zum_vortag,
+S.dosen_zweit_differenz_zum_vortag,
+S.dosen_biontech_kumulativ,
+S.dosen_moderna_kumulativ,
+S.dosen_astrazeneca_kumulativ,
+S.personen_erst_kumulativ,
+S.personen_voll_kumulativ,
+S.impf_quote_erst,
+S.impf_quote_voll,
+S.indikation_alter_dosen,
+S.indikation_beruf_dosen,
+S.indikation_medizinisch_dosen,
+S.indikation_pflegeheim_dosen,
+S.indikation_alter_erst,
+S.indikation_beruf_erst,
+S.indikation_medizinisch_erst,
+S.indikation_pflegeheim_erst,
+S.indikation_alter_voll,
+S.indikation_beruf_voll,
+S.indikation_medizinisch_voll,
+S.indikation_pflegeheim_voll,
+S.SOURCE)
 
 
 -- COMMAND ----------
@@ -614,7 +680,27 @@ LOCATION '/mnt/kaggle/Covid/Raw/GERMANY_DELIVERIES_TIMESERIES_V2/'
 
 -- COMMAND ----------
 
-
+MERGE INTO 
+COVID_RAW.TBL_GERMANY_DELIVERIES_TIMESERIES_V2 AS T
+USING
+COVID_RAW.VW_GERMANY_DELIVERIES_TIMESERIES_V2 AS S
+ON
+T.DATE = S.DATE
+WHEN NOT MATCHED 
+THEN INSERT (
+T.date,
+T.impfstoff, 
+T.region, 
+T.dosen,
+T.SOURCE
+)
+VALUES (
+S.date,
+S.impfstoff, 
+S.region, 
+S.dosen,
+S.SOURCE
+)
 
 -- COMMAND ----------
 
@@ -646,7 +732,28 @@ LOCATION '/mnt/kaggle/Covid/Raw/germany_vaccinations_by_state_v1/'
 
 -- COMMAND ----------
 
-
+MERGE INTO COVID_RAW.TBL_GERMANY_VACCINATIONS_BY_STATE_V1 AS T
+USING COVID_RAW.VW_GERMANY_VACCINATIONS_BY_STATE_V1 AS S
+ON T.code = S.code
+WHEN MATCHED THEN
+UPDATE SET
+T.vaccinationsTotal = S.vaccinationsTotal,
+T.peopleFirstTotal = S.peopleFirstTotal,
+T.peopleFullTotal = S.peopleFullTotal,
+T.SOURCE = S.SOURCE
+WHEN NOT MATCHED THEN INSERT (
+T.code,
+T.vaccinationsTotal,
+T.peopleFirstTotal,
+T.peopleFullTotal,
+T.SOURCE
+)
+VALUES (
+S.code,
+S.vaccinationsTotal,
+S.peopleFirstTotal,
+S.peopleFullTotal,
+S.SOURCE)
 
 -- COMMAND ----------
 
@@ -678,7 +785,14 @@ LOCATION '/mnt/kaggle/Covid/Raw/RKI_Altersgruppen/'
 
 -- COMMAND ----------
 
-
+MERGE INTO COVID_RAW.TBL_RKI_ALTERSGRUPPEN AS T
+USING COVID_RAW.VW_RKI_ALTERSGRUPPEN AS S
+ON T.properties = S.properties --and S.properties is not null
+WHEN NOT MATCHED and S.properties is not null THEN
+INSERT 
+(T.properties, T.source)
+VALUES
+(S.properties, S.source)
 
 -- COMMAND ----------
 
@@ -705,11 +819,18 @@ properties STRING,
 type STRING,
 SOURCE STRING)
 USING DELTA
-LOCATION '/mnt/kaggle/Raw/Ingestion/RKI_COVID19/'
+LOCATION '/mnt/kaggle/Covid/Raw/RKI_COVID19/'
 
 -- COMMAND ----------
 
-
+MERGE INTO COVID_RAW.TBL_RKI_COVID19 AS T
+USING COVID_RAW.VW_RKI_COVID19 AS S
+ON T.properties = S.properties --and S.properties is not null
+WHEN NOT MATCHED and S.properties is not null THEN
+INSERT 
+(T.properties, T.source)
+VALUES
+(S.properties, S.source)
 
 -- COMMAND ----------
 
@@ -741,7 +862,14 @@ LOCATION '/mnt/kaggle/Covid/Raw/RKI_Corona_Landkreise/'
 
 -- COMMAND ----------
 
-
+MERGE INTO COVID_RAW.TBL_RKI_CORONA_LANDKREISE AS T
+USING COVID_RAW.VW_RKI_CORONA_LANDKREISE AS S
+ON T.properties = S.properties --and S.properties is not null
+WHEN NOT MATCHED and S.properties is not null THEN
+INSERT 
+(T.properties, T.source)
+VALUES
+(S.properties, S.source)
 
 -- COMMAND ----------
 
@@ -773,7 +901,14 @@ LOCATION '/mnt/kaggle/Covid/Raw/RKI_Corona_Bundeslaender/'
 
 -- COMMAND ----------
 
-
+MERGE INTO COVID_RAW.TBL_RKI_CORONA_BUNDESLAENDER AS T
+USING COVID_RAW.VW_RKI_CORONA_BUNDESLAENDER AS S
+ON T.properties = S.properties --and S.properties is not null
+WHEN NOT MATCHED and S.properties is not null THEN
+INSERT 
+(T.properties, T.source)
+VALUES
+(S.properties, S.source)
 
 -- COMMAND ----------
 
@@ -805,7 +940,14 @@ LOCATION '/mnt/kaggle/Covid/Raw/RKI_Data_Status/'
 
 -- COMMAND ----------
 
-
+MERGE INTO COVID_RAW.TBL_RKI_DATA_STATUS AS T
+USING COVID_RAW.VW_RKI_DATA_STATUS AS S
+ON T.properties = S.properties --and S.properties is not null
+WHEN NOT MATCHED and S.properties is not null THEN
+INSERT 
+(T.properties, T.source)
+VALUES
+(S.properties, S.source)
 
 -- COMMAND ----------
 
@@ -837,7 +979,14 @@ LOCATION '/mnt/kaggle/Covid/Raw/RKI_Key_Data/'
 
 -- COMMAND ----------
 
-
+MERGE INTO COVID_RAW.TBL_RKI_KEY_DATA AS T
+USING COVID_RAW.VW_RKI_KEY_DATA AS S
+ON T.properties = S.properties --and S.properties is not null
+WHEN NOT MATCHED and S.properties is not null THEN
+INSERT 
+(T.properties, T.source)
+VALUES
+(S.properties, S.source)
 
 -- COMMAND ----------
 
@@ -866,6 +1015,17 @@ SOURCE STRING
 )
 USING DELTA
 LOCATION '/mnt/kaggle/Covid/Raw/RKI_History/'
+
+-- COMMAND ----------
+
+MERGE INTO COVID_RAW.TBL_RKI_HISTORY AS T
+USING COVID_RAW.VW_RKI_HISTORY AS S
+ON T.properties = S.properties --and S.properties is not null
+WHEN NOT MATCHED and S.properties is not null THEN
+INSERT 
+(T.properties, T.source)
+VALUES
+(S.properties, S.source)
 
 -- COMMAND ----------
 
