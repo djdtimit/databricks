@@ -4,6 +4,11 @@
 
 -- COMMAND ----------
 
+-- MAGIC %python
+-- MAGIC import databricks.koalas as ks
+
+-- COMMAND ----------
+
 CREATE DATABASE IF NOT EXISTS COVID_INGESTION
 
 -- COMMAND ----------
@@ -138,6 +143,71 @@ file_name STRING
 USING CSV
 OPTIONS ("header" True)
 LOCATION "/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/*.csv"
+
+-- COMMAND ----------
+
+--https://towardsdatascience.com/cleansing-and-transforming-schema-drifted-csv-files-into-relational-data-in-azure-databricks-519e82ea84ff
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC from pyspark.sql.functions import col
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC mnt_point_ingestion = '/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/'
+-- MAGIC mnt_point_raw = '/mnt/kaggle/Covid/Raw/csse_covid_19_daily_reports/'
+-- MAGIC file_list = [file.name for file in dbutils.fs.ls("dbfs:{}".format(mnt_point_ingestion))]
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC for file in file_list:
+-- MAGIC   loadFile = "{0}/{1}".format(mnt_point_ingestion, file)
+-- MAGIC   df = ks.read_csv(loadFile,dtype=str)
+-- MAGIC   df.to_delta(path=mnt_point_raw, mode='append', options={'mergeSchema':True})
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC df = spark.read.option("header", True).csv("/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/")
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC df.where(col("file_name") == '01-31-2021.csv').display()
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC df_csse_covid_19_daily_reports = ks.read_csv("/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/01-31-2020.csv")
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC df_csse_covid_19_daily_reports
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC df_csse_covid_19_daily_reports[(df_csse_covid_19_daily_reports['file_name'] == '01-31-2021.csv') | (df_csse_covid_19_daily_reports['file_name'] == '01-31-2020.csv')]
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC df_csse_covid_19_daily_reports[(df_csse_covid_19_daily_reports['file_name'] == '01-31-2020.csv')]
+
+-- COMMAND ----------
+
+SELECT distinct file_name FROM delta.`/mnt/kaggle/Covid/Raw/csse_covid_19_daily_reports/`
+--where file_name in ('01-31-2020.csv', '01-31-2021.csv', '12-31-2020.csv') --and country_region = 'US'
+order by file_name
+
+-- COMMAND ----------
+
+SELECT * FROM delta.`/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/`
+where file_name in ('01-31-2020.csv')
 
 -- COMMAND ----------
 

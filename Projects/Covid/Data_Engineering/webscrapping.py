@@ -4,6 +4,7 @@ import urllib
 import os
 import requests
 import re
+import databricks.koalas as ks
 
 # COMMAND ----------
 
@@ -127,7 +128,7 @@ csv_files = list(filter(fun, file))
 
 # COMMAND ----------
 
-save_path_csse_covid_19_daily_reports = '/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/'
+save_path_csse_covid_19_daily_reports = '/dbfs/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/'
 
 # COMMAND ----------
 
@@ -135,13 +136,22 @@ counter = 0
 for csv_file in csv_files:
   file_url = os.path.join(url.replace('github.com','raw.githubusercontent.com').replace('tree', ''), csv_file)
   
-  df_csv_file = pd.read_csv(file_url,sep=',',header=0)
+  df_csv_file = pd.read_csv(file_url,sep=',',header=0,dtype=str)
   df_csv_file['file_name'] = csv_file
+  
+  df_csv_file.columns = (df_csv_file.columns.str.replace(" ", "_").str.replace("/", "_").str.replace("Long_","Long").str.replace('Latitude', 'Lat'). 
+  str.replace('Longitude', 'Long').str.replace('Incident_Rate', 'Incidence_Rate').str.replace('-','_'))
+
   print('Progress: ', counter / len(csv_files) * 100,'%')
   counter += 1
   
-  df = spark.createDataFrame(df_csv_file)
-  df.write.format('csv').option('sep', ',').option('header', True).mode('append').save(save_path_csse_covid_19_daily_reports)
+  if not os.path.isdir(save_path_csse_covid_19_daily_reports):
+    os.makedirs(save_path_csse_covid_19_daily_reports)
+    
+  target_path = os.path.join(save_path_csse_covid_19_daily_reports, csv_file)
+  print(target_path)
+  
+  df_csv_file.to_csv(target_path, index=False)
 
 # COMMAND ----------
 

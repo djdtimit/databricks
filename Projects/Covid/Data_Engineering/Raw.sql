@@ -513,10 +513,91 @@ MERGE INTO
 covid_raw.TBL_csse_covid_19_daily_reports AS T 
 USING 
 COVID_RAW.VW_csse_covid_19_daily_reports AS S
+ON T.Last_Update = S.Last_Update and T.Combined_Key = S.Combined_Key
+WHEN NOT MATCHED
+THEN INSERT(
+T.FIPS,
+T.Admin2,
+T.Province_State,
+T.Country_Region,
+T.Last_Update,
+T.Lat,
+T.Long_,
+T.Confirmed,
+T.Deaths,
+T.Recovered,
+T.Active,
+T.Combined_Key,
+T.Incident_Rate,
+T.Case_Fatality_Ratio,
+T.file_name,
+T.SOURCE)
+VALUES (
+S.FIPS,
+S.Admin2,
+S.Province_State,
+S.Country_Region,
+S.Last_Update,
+S.Lat,
+S.Long_,
+S.Confirmed,
+S.Deaths,
+S.Recovered,
+S.Active,
+S.Combined_Key,
+S.Incident_Rate,
+S.Case_Fatality_Ratio,
+S.file_name,
+S.SOURCE)
 
 -- COMMAND ----------
 
-SELECT * FROM COVID_RAW.VW_csse_covid_19_daily_reports
+COPY INTO covid_raw.TBL_csse_covid_19_daily_reports
+FROM (SELECT FIPS,
+Admin2,
+Province_State,
+Country_Region,
+Last_Update,
+Lat,
+Long_,
+Confirmed,
+Deaths,
+Recovered,
+Active,
+Combined_Key,
+Incident_Rate,
+Case_Fatality_Ratio,
+file_name,
+INPUT_FILE_NAME() AS SOURCE
+FROM '/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/*.csv')
+FILEFORMAT = CSV
+FORMAT_OPTIONS('header' = 'true')
+--COPY_OPTIONS ('force' = 'true')
+
+-- COMMAND ----------
+
+SELECT _c0, _c1, _c10, _c11, _c12, _c13, _c14, _c2, _c3, _c4, _c5, _c6, _c7, _c8, _c9
+FROM csv.`/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/*.csv`
+
+-- COMMAND ----------
+
+SELECT _c0, _c1, _c10, _c11, _c12, _c13, _c14, _c2, _c3, _c4, _c5, _c6, _c7, _c8, _c9
+FROM csv.`/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/*.csv`
+where _c4 is null and _c11 is null
+
+-- COMMAND ----------
+
+SELECT distinct(source) FROM COVID_RAW.VW_csse_covid_19_daily_reports
+where last_update is null and combined_key is null
+
+-- COMMAND ----------
+
+SELECT * FROM covid_raw.TBL_csse_covid_19_daily_reports
+where last_update is null and combined_key is null
+
+-- COMMAND ----------
+
+drop table covid_raw.TBL_csse_covid_19_daily_reports
 
 -- COMMAND ----------
 
