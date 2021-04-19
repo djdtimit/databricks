@@ -8,6 +8,11 @@
 
 -- COMMAND ----------
 
+-- MAGIC %python
+-- MAGIC import databricks.koalas as ks
+
+-- COMMAND ----------
+
 CREATE DATABASE IF NOT EXISTS covid_raw
 
 -- COMMAND ----------
@@ -552,52 +557,65 @@ S.SOURCE)
 
 -- COMMAND ----------
 
-COPY INTO covid_raw.TBL_csse_covid_19_daily_reports
-FROM (SELECT FIPS,
-Admin2,
-Province_State,
-Country_Region,
-Last_Update,
-Lat,
-Long_,
-Confirmed,
-Deaths,
-Recovered,
-Active,
-Combined_Key,
-Incident_Rate,
-Case_Fatality_Ratio,
-file_name,
-INPUT_FILE_NAME() AS SOURCE
-FROM '/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/*.csv')
-FILEFORMAT = CSV
-FORMAT_OPTIONS('header' = 'true')
---COPY_OPTIONS ('force' = 'true')
+-- MAGIC %python
+-- MAGIC 
+-- MAGIC def rename_columns(s) -> str:
+-- MAGIC   new_column = s.replace(' ','_').replace('/','_').replace('-','_')
+-- MAGIC   
+-- MAGIC   if 'Long' in s:
+-- MAGIC     new_column = 'Longitude'
+-- MAGIC   if 'Lat' in s:
+-- MAGIC     new_column = 'Latitude'
+-- MAGIC   if 'Incid' in s:
+-- MAGIC     new_column = 'Incidence_Rate'
+-- MAGIC   return new_column
+-- MAGIC 
+-- MAGIC mount_point = '/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/'
+-- MAGIC 
+-- MAGIC file_list = [file.name for file in dbutils.fs.ls("dbfs:{}".format(mount_point))]
+-- MAGIC 
+-- MAGIC for file in file_list:
+-- MAGIC   loadFile = "{0}/{1}".format(mount_point, file)
+-- MAGIC   df_csse_covid_19_daily_reports = ks.read_csv(loadFile,dtype=str)
+-- MAGIC   
+-- MAGIC   df_csse_covid_19_daily_reports['_file_name'] = file
+-- MAGIC   
+-- MAGIC   df_renamed = df_csse_covid_19_daily_reports.rename(rename_columns, axis='columns')
+-- MAGIC   
+-- MAGIC   if 'Active' not in df_renamed.columns:
+-- MAGIC     df_renamed['Active'] = ''
+-- MAGIC    
+-- MAGIC   if 'Latitude' not in df_renamed.columns:
+-- MAGIC     df_renamed['Latitude'] = ''
+-- MAGIC 
+-- MAGIC   if 'Longitude' not in df_renamed.columns:
+-- MAGIC     df_renamed['Longitude'] = ''
+-- MAGIC 
+-- MAGIC   if 'FIPS' not in df_renamed.columns:
+-- MAGIC     df_renamed['FIPS'] = ''
+-- MAGIC 
+-- MAGIC   if 'Admin2' not in df_renamed.columns:
+-- MAGIC     df_renamed['Admin2'] = ''
+-- MAGIC 
+-- MAGIC   if 'Combined_Key' not in df_renamed.columns:
+-- MAGIC     df_renamed['Combined_Key'] = ''
+-- MAGIC 
+-- MAGIC   if 'Incidence_Rate' not in df_renamed.columns:
+-- MAGIC     df_renamed['Incidence_Rate'] = ''
+-- MAGIC 
+-- MAGIC   if 'Case_Fatality_Ratio' not in df_renamed.columns:
+-- MAGIC     df_renamed['Case_Fatality_Ratio'] = ''
+-- MAGIC     
+-- MAGIC   df_final = df_renamed[["FIPS","Admin2","Province_State","Country_Region","Last_Update","Latitude","Longitude","Confirmed","Deaths","Recovered","Active","Combined_Key","Incidence_Rate","Case_Fatality_Ratio","_file_name"]]
+-- MAGIC   
+-- MAGIC   df_final.to_delta(path= '/mnt/kaggle/Covid/Raw/csse_covid_19_daily_reports/',mode='append', index=False)
+-- MAGIC   
+-- MAGIC   
 
 -- COMMAND ----------
 
-SELECT _c0, _c1, _c10, _c11, _c12, _c13, _c14, _c2, _c3, _c4, _c5, _c6, _c7, _c8, _c9
-FROM csv.`/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/*.csv`
-
--- COMMAND ----------
-
-SELECT _c0, _c1, _c10, _c11, _c12, _c13, _c14, _c2, _c3, _c4, _c5, _c6, _c7, _c8, _c9
-FROM csv.`/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/*.csv`
-where _c4 is null and _c11 is null
-
--- COMMAND ----------
-
-SELECT distinct(source) FROM COVID_RAW.VW_csse_covid_19_daily_reports
-where last_update is null and combined_key is null
-
--- COMMAND ----------
-
-SELECT * FROM covid_raw.TBL_csse_covid_19_daily_reports
-where last_update is null and combined_key is null
-
--- COMMAND ----------
-
-drop table covid_raw.TBL_csse_covid_19_daily_reports
+SELECT * FROM delta.`/mnt/kaggle/Covid/Raw/csse_covid_19_daily_reports/`
+where Deaths is null
 
 -- COMMAND ----------
 
