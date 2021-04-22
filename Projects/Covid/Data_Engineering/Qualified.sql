@@ -1,409 +1,409 @@
 -- Databricks notebook source
--- MAGIC %python
--- MAGIC dbutils.notebook.run("Raw", 0)
-
--- COMMAND ----------
-
-CREATE WIDGET TEXT update_duration_days DEFAULT "10"
-
-
--- COMMAND ----------
-
-CREATE DATABASE IF NOT EXISTS covid_qualified
+CREATE DATABASE covid_qualified
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC **Country Vaccinations**
+-- MAGIC **csse_covid_19_daily_reports**
 
 -- COMMAND ----------
 
-CREATE OR REPLACE VIEW covid_qualified.VW_country_vaccinations AS
-SELECT 
-M.TARGET_COUNTRY_NAME AS COUNTRY
-,V.ISO_CODE
-,CAST (date as DATE)
-,CAST (total_vaccinations as INTEGER)
-,CAST (people_vaccinated as INTEGER)
-,CAST (people_fully_vaccinated AS INTEGER)
-,CAST (daily_vaccinations_raw AS INTEGER)
-,CAST(daily_vaccinations AS INTEGER)
-,CAST(total_vaccinations_per_hundred as DECIMAL(23,5))
-,CAST(people_vaccinated_per_hundred as DECIMAL(23,5))
-,CAST(people_fully_vaccinated_per_hundred as DECIMAL(23,5))
-,CAST(daily_vaccinations_per_million as DECIMAL(23,5))
-,CAST(vaccines as STRING)
-,CAST(source_name as STRING)
-,CAST(source_website AS STRING)
-FROM covid_raw.TBL_country_vaccinations V
-JOIN covid_raw.TBL_COUNTRY_MAPPING M
-ON
-V.COUNTRY = M.SOURCE_COUNTRY_NAME
-
-
--- COMMAND ----------
-
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_country_vaccinations (
-COUNTRY STRING
-,ISO_CODE STRING
-,date DATE
-,total_vaccinations INTEGER
-,people_vaccinated INTEGER
-,people_fully_vaccinated INTEGER
-,daily_vaccinations_raw INTEGER
-,daily_vaccinations INTEGER
-,total_vaccinations_per_hundred DECIMAL(23,5)
-,people_vaccinated_per_hundred DECIMAL(23,5)
-,people_fully_vaccinated_per_hundred DECIMAL(23,5)
-,daily_vaccinations_per_million DECIMAL(23,5)
-,vaccines STRING
-,source_name STRING
-,source_website STRING
-,INSERT_TS TIMESTAMP
-,UPDATE_TS TIMESTAMP
-)
-USING DELTA
-LOCATION "/mnt/kaggle/Covid/Qualified/covid_19_world_vaccination_progress/country_vaccinations/"
-
--- COMMAND ----------
-
-MERGE INTO covid_qualified.TBL_country_vaccinations T
-USING 
-covid_qualified.VW_country_vaccinations S
-ON T.COUNTRY = S.COUNTRY AND T.DATE = S.DATE AND T.ISO_CODE = S.ISO_CODE
-WHEN MATCHED and datediff(current_date, date(T.UPDATE_TS)) >= getArgument("update_duration_days")
--- data cleaning
-AND S.ISO_CODE IS NOT NULL
-THEN
-UPDATE SET
-T.ISO_CODE = S.ISO_CODE
-,T.total_vaccinations = S.total_vaccinations
-,T.people_vaccinated = S.people_vaccinated
-,T.people_fully_vaccinated = S.people_fully_vaccinated
-,T.daily_vaccinations_raw = S.daily_vaccinations_raw
-,T.daily_vaccinations = S.daily_vaccinations
-,T.total_vaccinations_per_hundred = S.total_vaccinations_per_hundred
-,T.people_vaccinated_per_hundred = S.people_vaccinated_per_hundred
-,T.people_fully_vaccinated_per_hundred = S.people_fully_vaccinated_per_hundred
-,T.daily_vaccinations_per_million = S.daily_vaccinations_per_million
-,T.vaccines = S.vaccines
-,T.source_name = S.source_name
-,T.source_website = S.source_website
-,T.UPDATE_TS = CURRENT_TIMESTAMP
-WHEN NOT MATCHED 
--- Data Cleaning
-AND S.ISO_CODE IS NOT NULL 
-THEN INSERT
-(
-T.COUNTRY
-,T.ISO_CODE
-,T.date
-,T.total_vaccinations
-,T.people_vaccinated
-,T.people_fully_vaccinated
-,T.daily_vaccinations_raw
-,T.daily_vaccinations
-,T.total_vaccinations_per_hundred
-,T.people_vaccinated_per_hundred
-,T.people_fully_vaccinated_per_hundred
-,T.daily_vaccinations_per_million
-,T.vaccines
-,T.source_name
-,T.source_website
-,T.INSERT_TS
-,T.UPDATE_TS
-)
-VALUES (
-S.COUNTRY
-,S.ISO_CODE
-,S.date
-,S.total_vaccinations
-,S.people_vaccinated
-,S.people_fully_vaccinated
-,S.daily_vaccinations_raw
-,S.daily_vaccinations
-,S.total_vaccinations_per_hundred
-,S.people_vaccinated_per_hundred
-,S.people_fully_vaccinated_per_hundred
-,S.daily_vaccinations_per_million
-,S.vaccines
-,S.source_name
-,S.source_website
-,CURRENT_TIMESTAMP
-,CURRENT_TIMESTAMP)
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC **Covid_DE**
-
--- COMMAND ----------
-
-CREATE OR REPLACE VIEW covid_qualified.VW_covid_de AS
-SELECT 
-state,
-country,
-age_group,
-gender,
-cast(date as date),
-cast(cases as INTEGER),
-cast(death as INTEGER),
-cast(recovered as INTEGER)
-FROM covid_raw.TBL_COVID_DE
-
--- COMMAND ----------
-
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_covid_de (
-state STRING,
-country STRING,
-age_group STRING,
-gender STRING,
-date DATE,
-CASES INTEGER,
-DEATH INTEGER,
-RECOVERED INTEGER
-,INSERT_TS TIMESTAMP
-,UPDATE_TS TIMESTAMP)
-USING DELTA
-LOCATION "/mnt/kaggle/Covid/Qualified/covid19-tracking-germany/Covid_DE/"
-
--- COMMAND ----------
-
-MERGE INTO covid_qualified.TBL_covid_de T 
-USING
-covid_qualified.VW_covid_de S
-ON T.state = S.state and T.country = S.country AND T.age_group = S.age_group and T.gender = S.gender and T.date = s.date
-WHEN MATCHED and datediff(current_date, date(T.UPDATE_TS)) >= getArgument("update_duration_days") 
-THEN
-UPDATE SET T.CASES = S.CASES, T.DEATH = S.DEATH, T.RECOVERED = S.RECOVERED, T.UPDATE_TS = CURRENT_TIMESTAMP
-WHEN NOT MATCHED THEN
-INSERT 
-(T.state
-,T.country
-,T.age_group
-,T.gender
-,T.date
-,T.CASES
-,T.DEATH
-,T.RECOVERED
-,T.INSERT_TS
-,T.UPDATE_TS
-)
-VALUES
-(S.state
-,S.country
-,S.age_group
-,S.gender
-,S.date
-,S.CASES
-,S.DEATH
-,S.RECOVERED
-,CURRENT_TIMESTAMP
-,CURRENT_TIMESTAMP)
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC **Demographics_DE**
-
--- COMMAND ----------
-
-CREATE OR REPLACE VIEW covid_qualified.VW_demographics_de as 
-SELECT state,
-CASE WHEN gender = 'female' Then 'F' ELSE 'M' END AS GENDER,
-age_group,
-cast(population as INTEGER) 
-FROM covid_raw.TBL_DEMOGRAPHICS_DE
-
--- COMMAND ----------
-
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_demographics_DE (
-state STRING,
-GENDER STRING,
-AGE_GROUP STRING,
-POPULATION INTEGER
-,INSERT_TS TIMESTAMP
-,UPDATE_TS TIMESTAMP)
-USING DELTA
-LOCATION '/mnt/kaggle/Covid/Qualified/covid19-tracking-germany/Demographics_DE/'
-
--- COMMAND ----------
-
-MERGE INTO covid_qualified.TBL_demographics_DE T
-USING
-covid_qualified.VW_demographics_de S
-ON T.state = S.state and T.gender = S.gender and T.age_group = S.age_group
-WHEN MATCHED and datediff(current_date, date(T.UPDATE_TS)) >= getArgument("update_duration_days")
-THEN 
-UPDATE SET T.POPULATION = S.POPULATION, T.UPDATE_TS = CURRENT_TIMESTAMP
-WHEN NOT MATCHED THEN
-INSERT (T.STATE, T.GENDER, T.AGE_GROUP, T.POPULATION, T.INSERT_TS, T.UPDATE_TS) 
-VALUES (S.STATE, S.GENDER, S.AGE_GROUP, S.POPULATION, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC **Worldometer_coronavirus_daily_data**
-
--- COMMAND ----------
-
-CREATE OR REPLACE VIEW covid_qualified.VW_worldometer_coronavirus_daily_data as
-SELECT 
-cast(date as date),
-target_country_name as country,
-CAST(CUMULATIVE_TOTAL_CASES AS INTEGER),
-CAST(DAILY_NEW_CASES AS INTEGER),
-CAST(ACTIVE_CASES AS INTEGER),
-CAST(CUMULATIVE_TOTAL_DEATHS AS INTEGER),
-CAST(DAILY_NEW_DEATHS AS INTEGER)
-FROM covid_raw.TBL_Worldometer_coronavirus_daily_data D
-JOIN covid_raw.TBL_COUNTRY_MAPPING M
-ON
-D.COUNTRY = M.SOURCE_COUNTRY_NAME
-
--- COMMAND ----------
-
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_worldometer_coronavirus_daily_data (
-date date,
-country STRING,
-CUMULATIVE_TOTAL_CASES INTEGER,
-DAILY_NEW_CASES INTEGER,
-ACTIVE_CASES INTEGER,
-CUMULATIVE_TOTAL_DEATHS INTEGER,
-DAILY_NEW_DEATHS INTEGER
-,INSERT_TS TIMESTAMP
-,UPDATE_TS TIMESTAMP
-)
-USING DELTA
-LOCATION '/mnt/kaggle/Covid/Qualified/covid19-global-dataset/worldometer_coronavirus_daily_data/'
-
--- COMMAND ----------
-
-MERGE INTO covid_qualified.TBL_worldometer_coronavirus_daily_data T
-USING covid_qualified.VW_worldometer_coronavirus_daily_data S
-ON T.DATE = S.DATE AND T.COUNTRY = S.COUNTRY
-WHEN MATCHED and datediff(current_date, date(T.UPDATE_TS)) >= getArgument("update_duration_days")
-THEN
-UPDATE SET 
-T.CUMULATIVE_TOTAL_CASES = S.CUMULATIVE_TOTAL_CASES,
-T.DAILY_NEW_CASES = S.DAILY_NEW_CASES,
-T.ACTIVE_CASES = S.ACTIVE_CASES,
-T.CUMULATIVE_TOTAL_DEATHS = S.CUMULATIVE_TOTAL_DEATHS,
-T.DAILY_NEW_DEATHS = S.DAILY_NEW_DEATHS,
-T.UPDATE_TS = CURRENT_TIMESTAMP
-WHEN NOT MATCHED THEN
-INSERT (
-T.date,
-T.country,
-T.CUMULATIVE_TOTAL_CASES,
-T.DAILY_NEW_CASES,
-T.ACTIVE_CASES,
-T.CUMULATIVE_TOTAL_DEATHS,
-T.DAILY_NEW_DEATHS,
-T.INSERT_TS,
-T.UPDATE_TS
-)
-VALUES (
-S.date,
-S.country,
-S.CUMULATIVE_TOTAL_CASES,
-S.DAILY_NEW_CASES,
-S.ACTIVE_CASES,
-S.CUMULATIVE_TOTAL_DEATHS,
-S.DAILY_NEW_DEATHS,
-current_timestamp,
-current_timestamp)
-
--- COMMAND ----------
-
--- MAGIC %md
--- MAGIC **worldometer_coronavirus_summary_data**
-
--- COMMAND ----------
-
-CREATE OR REPLACE VIEW covid_qualified.VW_worldometer_coronavirus_summary_data AS
-SELECT 
-target_country_name as country,
-continent,
-cast(total_confirmed as INTEGER),
-cast(total_deaths as INTEGER),
-cast(total_recovered as INTEGER),
-cast(active_cases as INTEGER),
-cast(Serious_or_critical as INTEGER),
-cast(total_cases_per_lm_population as DECIMAL(23,5)),
-cast(total_tests as INTEGER),
-cast(total_tests_per_lm_population as DECIMAL(23,5)),
-cast(population as INTEGER)
+CREATE
+OR REPLACE VIEW covid_qualified.VW_csse_covid_19_daily_reports AS
+SELECT
+  NULLIF(FIPS, '') :: INT AS FIPS,
+  NULLIF(Admin2, '') AS Admin2,
+  NULLIF(Province_State, '') AS Province_State,
+  NULLIF(Country_Region, '') AS Country_Region,
+  NULLIF(Last_Update, '') :: TIMESTAMP AS Last_Update,
+  NULLIF(Latitude, '') :: DECIMAL(38, 15) AS Latitude,
+  NULLIF(Longitude, '') :: DECIMAL(38, 15) AS Longitude,
+  NULLIF(Confirmed, '') :: INT AS Confirmed,
+  NULLIF(Deaths, '') :: INT AS Deaths,
+  NULLIF(Recovered, '') :: INT AS Recovered,
+  NULLIF(Active, '') :: INT AS Active,
+  NULLIF(Combined_Key, '') AS Combined_Key,
+  NULLIF(Incidence_Rate, '') :: DECIMAL(38, 15) AS Incidence_Rate,
+  NULLIF(Case_Fatality_Ratio, '') :: DECIMAL(38, 15) AS Case_Fatality_Ratio
 FROM
-covid_raw.TBL_worldometer_coronavirus_summary_data s
-join covid_raw.TBL_COUNTRY_MAPPING M
-ON
-s.COUNTRY = M.SOURCE_COUNTRY_NAME
+  COVID_RAW.TBL_csse_covid_19_daily_reports
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_worldometer_coronavirus_summary_data (
-country STRING,
-continent STRING,
-total_confirmed INTEGER,
-total_deaths INTEGER,
-total_recovered INTEGER,
-active_cases INTEGER,
-Serious_or_critical INTEGER,
-total_cases_per_lm_population DECIMAL(23,5),
-total_tests INTEGER,
-total_tests_per_lm_population DECIMAL(23,5),
-population INTEGER
-,INSERT_TS TIMESTAMP
-,UPDATE_TS TIMESTAMP
-)
-USING DELTA
-LOCATION "/mnt/kaggle/Covid/Qualified/covid19-global-dataset/worldometer_coronavirus_summary_data/"
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_csse_covid_19_daily_reports USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_csse_covid_19_daily_reports/' AS
+SELECT
+  *
+FROM
+  covid_qualified.VW_csse_covid_19_daily_reports
 
 -- COMMAND ----------
 
-MERGE INTO covid_qualified.TBL_worldometer_coronavirus_summary_data T
-USING
-covid_qualified.VW_worldometer_coronavirus_summary_data S
-ON T.country = S.country and T.continent = S.continent
-WHEN MATCHED AND datediff(current_date, date(T.UPDATE_TS)) >= getArgument("update_duration_days")
-THEN
-UPDATE SET 
-T.total_confirmed = S.total_confirmed,
-T.total_deaths = S.total_deaths,
-T.total_recovered = S.total_recovered,
-T.active_cases = S.active_cases,
-T.Serious_or_critical = S.Serious_or_critical,
-T.total_cases_per_lm_population = S.total_cases_per_lm_population,
-T.total_tests = S.total_tests,
-T.total_tests_per_lm_population = S.total_tests_per_lm_population,
-T.population = S.population,
-T.UPDATE_TS = CURRENT_TIMESTAMP
-WHEN NOT MATCHED THEN
-INSERT (T.country,
-T.continent,
-T.total_confirmed,
-T.total_deaths,
-T.total_recovered,
-T.active_cases,
-T.Serious_or_critical,
-T.total_cases_per_lm_population,
-T.total_tests,
-T.total_tests_per_lm_population,
-T.population,
-T.INSERT_TS,
-T.UPDATE_TS)
-VALUES (
-S.country,
-S.continent,
-S.total_confirmed,
-S.total_deaths,
-S.total_recovered,
-S.active_cases,
-S.Serious_or_critical,
-S.total_cases_per_lm_population,
-S.total_tests,
-S.total_tests_per_lm_population,
-S.population,
-CURRENT_TIMESTAMP,
-CURRENT_TIMESTAMP)
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **germany_vaccinations_timeseries_v2**
+
+-- COMMAND ----------
+
+CREATE
+OR REPLACE VIEW covid_qualified.vw_germany_vaccinations_timeseries_v2 AS
+select
+  NULLIF(date, '') :: DATE AS date,
+  NULLIF(dosen_kumulativ, '') :: INT AS dosen_kumulativ,
+  NULLIF(dosen_differenz_zum_vortag, '') :: INT AS dosen_differenz_zum_vortag,
+  NULLIF(dosen_erst_differenz_zum_vortag, '') :: INT AS dosen_erst_differenz_zum_vortag,
+  NULLIF(dosen_zweit_differenz_zum_vortag, '') :: INT AS dosen_zweit_differenz_zum_vortag,
+  NULLIF(dosen_biontech_kumulativ, '') :: INT AS dosen_biontech_kumulativ,
+  NULLIF(dosen_moderna_kumulativ, '') :: INT AS dosen_moderna_kumulativ,
+  NULLIF(dosen_astrazeneca_kumulativ, '') :: INT AS dosen_astrazeneca_kumulativ,
+  NULLIF(personen_erst_kumulativ, '') :: INT AS personen_erst_kumulativ,
+  NULLIF(personen_voll_kumulativ, '') :: INT AS personen_voll_kumulativ,
+  NULLIF(impf_quote_erst, '') :: DECIMAL(10, 3) AS impf_quote_erst,
+  NULLIF(impf_quote_voll, '') :: DECIMAL(10, 3) AS impf_quote_voll,
+  NULLIF(indikation_alter_dosen, '') :: INT AS indikation_alter_dosen,
+  NULLIF(indikation_beruf_dosen, '') :: INT AS indikation_beruf_dosen,
+  NULLIF(indikation_medizinisch_dosen, '') :: INT AS indikation_medizinisch_dosen,
+  NULLIF(indikation_pflegeheim_dosen, '') :: INT AS indikation_pflegeheim_dosen,
+  NULLIF(indikation_alter_erst, '') :: INT AS indikation_alter_erst,
+  NULLIF(indikation_beruf_erst, '') :: INT AS indikation_beruf_erst,
+  NULLIF(indikation_medizinisch_erst, '') :: INT AS indikation_medizinisch_erst,
+  NULLIF(indikation_pflegeheim_erst, '') :: INT AS indikation_pflegeheim_erst,
+  NULLIF(indikation_alter_voll, '') :: INT AS indikation_alter_voll,
+  NULLIF(indikation_beruf_voll, '') :: INT AS indikation_beruf_voll,
+  NULLIF(indikation_medizinisch_voll, '') :: INT AS indikation_medizinisch_voll,
+  NULLIF(indikation_pflegeheim_voll, '') :: INT AS indikation_pflegeheim_voll
+FROM
+  COVID_RAW.TBL_germany_vaccinations_timeseries_v2
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_germany_vaccinations_timeseries_v2 USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_germany_vaccinations_timeseries_v2/' AS
+SELECT
+  *
+FROM
+  covid_qualified.vw_germany_vaccinations_timeseries_v2
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **germany_deliveries_timeseries_v2**
+
+-- COMMAND ----------
+
+CREATE
+OR REPLACE VIEW covid_qualified.VW_germany_deliveries_timeseries_v2 AS
+select
+  NULLIF(date, '') :: DATE AS date,
+  NULLIF(impfstoff, '') AS impfstoff,
+  NULLIF(region, '') AS region,
+  NULLIF(dosen, '') :: INT AS dosen
+from
+  COVID_RAW.TBL_germany_deliveries_timeseries_v2
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_germany_deliveries_timeseries_v2 USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_germany_deliveries_timeseries_v2/' AS
+SELECT
+  *
+FROM
+  covid_qualified.vw_germany_deliveries_timeseries_v2
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **germany_vaccinations_by_state_v1**
+
+-- COMMAND ----------
+
+CREATE
+OR REPLACE VIEW covid_qualified.VW_germany_vaccinations_by_state_v1 AS
+SELECT
+  NULLIF(code, '') AS code,
+  NULLIF(vaccinationsTotal, '') :: INT AS vaccinationsTotal,
+  NULLIF(peopleFirstTotal, '') :: INT AS peopleFirstTotal,
+  NULLIF(peopleFullTotal, '') :: INT AS peopleFullTotal
+FROM
+  COVID_RAW.TBL_germany_vaccinations_by_state_v1
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_germany_vaccinations_by_state_v1 USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_germany_vaccinations_by_state_v1/' AS
+SELECT
+  *
+FROM
+  covid_qualified.vw_germany_vaccinations_by_state_v1
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_Altersgruppen**
+
+-- COMMAND ----------
+
+CREATE
+OR REPLACE VIEW covid_qualified.VW_RKI_Altersgruppen AS
+SELECT
+  NULLIF(properties.AdmUnitId, '') :: INT AS AdmUnitId,
+  NULLIF(properties.Altersgruppe, '') AS Altersgruppe,
+  NULLIF(properties.AnzFall100kM, '') :: DECIMAL(10, 2) AS AnzFall100kM,
+  NULLIF(properties.AnzFall100kW, '') :: DECIMAL(10, 2) AS AnzFall100kW,
+  NULLIF(properties.AnzFallM, '') :: INT AS AnzFallM,
+  NULLIF(properties.AnzFallW, '') :: INT AS AnzFallW,
+  NULLIF(properties.AnzTodesfall100kM, '') :: DECIMAL(10, 2) AS AnzTodesfall100kM,
+  NULLIF(properties.AnzTodesfall100kW, '') :: DECIMAL(10, 2) AS AnzTodesfall100kW,
+  NULLIF(properties.AnzTodesfallM, '') :: INT AS AnzTodesfallM,
+  NULLIF(properties.AnzTodesfallW, '') :: INT AS AnzTodesfallW,
+  NULLIF(properties.BundeslandId, '') :: INT AS BundeslandId,
+  NULLIF(properties.ObjectId, '') :: INT AS ObjectId
+FROM
+  COVID_RAW.TBL_RKI_Altersgruppen
+WHERE
+  NULLIF(properties.ObjectId, '') is not null
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_Altersgruppen USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_RKI_Altersgruppen/' AS
+SELECT
+  *
+FROM
+  covid_qualified.vw_RKI_Altersgruppen
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_COVID19**
+
+-- COMMAND ----------
+
+CREATE
+OR REPLACE VIEW covid_qualified.VW_RKI_COVID19 AS
+SELECT
+  NULLIF(properties.Altersgruppe, '') AS Altersgruppe,
+  NULLIF(properties.Altersgruppe2, '') AS Altersgruppe2,
+  NULLIF(properties.AnzahlFall, '') :: INT AS AnzahlFall,
+  NULLIF(properties.AnzahlGenesen, '') :: INT AS AnzahlGenesen,
+  NULLIF(properties.AnzahlTodesfall, '') :: INT AS AnzahlTodesfall,
+  NULLIF(properties.Bundesland, '') AS Bundesland,
+  NULLIF(
+    to_timestamp(
+      trim(replace(properties.Datenstand, ' Uhr', '')),
+      'dd.MM.yyyy, HH:mm'
+    ),
+    ''
+  ) AS Datenstand,
+  NULLIF(properties.Geschlecht, '') AS Geschlecht,
+  NULLIF(properties.IdBundesland, '') :: INT AS IdBundesland,
+  NULLIF(properties.IdLandkreis, '') :: INT AS IdLandkreis,
+  NULLIF(properties.IstErkrankungsbeginn, '') :: INT AS IstErkrankungsbeginn,
+  NULLIF(properties.Landkreis, '') AS Landkreis,
+  NULLIF(properties.Meldedatum, '') :: TIMESTAMP AS Meldedatum,
+  NULLIF(properties.NeuGenesen, '') :: INT AS NeuGenesen,
+  NULLIF(properties.NeuerFall, '') :: INT AS NeuerFall,
+  NULLIF(properties.NeuerTodesfall, '') :: INT AS NeuerTodesfall,
+  NULLIF(properties.ObjectId, '') :: INT AS ObjectId,
+  NULLIF(properties.Refdatum, '') :: TIMESTAMP AS Refdatum
+FROM
+  COVID_RAW.TBL_RKI_COVID19
+WHERE
+  NULLIF(properties.ObjectId, '') is not null
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_COVID19 USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_RKI_COVID19/' AS
+SELECT
+  *
+FROM
+  covid_qualified.vw_RKI_COVID19
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_Corona_Landkreise**
+
+-- COMMAND ----------
+
+CREATE
+OR REPLACE VIEW covid_qualified.VW_RKI_Corona_Landkreise AS
+SELECT
+  geometry.coordinates AS GEOMETRY,
+  NULLIF(properties.ADE, '') :: INT AS ADE,
+  NULLIF(properties.AGS, '') AS AGS,
+  NULLIF(properties.AGS_0, '') AS AGS_0,
+  NULLIF(properties.AdmUnitId, '') AS AdmUnitId,
+  NULLIF(properties.BEM, '') AS BEM,
+  NULLIF(properties.BEZ, '') AS BEZ,
+  NULLIF(properties.BL, '') AS BL,
+  NULLIF(properties.BL_ID, '') :: INT AS BL_ID,
+  NULLIF(properties.BSG, '') :: INT AS BSG,
+  NULLIF(properties.DEBKG_ID, '') AS DEBKG_ID,
+  NULLIF(properties.EWZ, '') :: INT AS EWZ,
+  NULLIF(properties.EWZ_BL, '') :: INT AS EWZ_BL,
+  NULLIF(properties.FK_S3, '') AS FK_S3,
+  NULLIF(properties.GEN, '') AS GEN,
+  NULLIF(properties.GF, '') :: INT AS GF,
+  NULLIF(properties.IBZ, '') :: INT AS IBZ,
+  NULLIF(properties.KFL, '') :: DECIMAL(10, 3) AS KFL,
+  NULLIF(properties.NBD, '') AS NBD,
+  NULLIF(properties.NUTS, '') AS NUTS,
+  NULLIF(properties.OBJECTID, '') :: INT AS OBJECTID,
+  NULLIF(properties.RS, '') AS RS,
+  NULLIF(properties.RS_0, '') AS RS_0,
+  NULLIF(properties.SDV_RS, '') AS SDV_RS,
+  NULLIF(properties.SHAPE_Area, '') :: DECIMAL(20, 18) AS SHAPE_Area,
+  NULLIF(properties.SHAPE_Length, '') :: DECIMAL(20, 18) AS SHAPE_Length,
+  NULLIF(properties.SN_G, '') AS SN_G,
+  NULLIF(properties.SN_K, '') AS SN_K,
+  NULLIF(properties.SN_L, '') AS SN_L,
+  NULLIF(properties.SN_R, '') AS SN_R,
+  NULLIF(properties.SN_V1, '') AS SN_V1,
+  NULLIF(properties.SN_V2, '') AS SN_V2,
+  NULLIF(
+    to_timestamp(properties.WSK, 'yyyy/MM/dd HH:mm:ss.SSS'),
+    ''
+  ) AS WSK,
+  NULLIF(properties.cases, '') :: INT AS cases,
+  NULLIF(properties.cases7_bl, '') :: INT AS cases7_bl,
+  NULLIF(properties.cases7_bl_per_100k, '') :: DECIMAL(38, 15) AS cases7_bl_per_100k,
+  NULLIF(properties.cases7_lk, '') :: INT AS cases7_lk,
+  NULLIF(properties.cases7_per_100k, '') :: DECIMAL(38, 15) AS cases7_per_100k,
+  NULLIF(properties.cases7_per_100k_txt, '') :: DECIMAL(38, 15) AS cases7_per_100k_txt,
+  NULLIF(properties.cases_per_100k, '') :: DECIMAL(38, 15) AS cases_per_100k,
+  NULLIF(properties.cases_per_population, '') :: DECIMAL(38, 15) AS cases_per_population,
+  NULLIF(properties.county, '') AS county,
+  NULLIF(properties.death7_bl, '') :: INT AS death7_bl,
+  NULLIF(properties.death7_lk, '') :: INT AS death7_lk,
+  NULLIF(properties.death_rate, '') :: DECIMAL(38, 15) AS death_rate,
+  NULLIF(properties.deaths, '') :: INT AS deaths,
+  NULLIF(
+    to_timestamp(
+      trim(replace(properties.last_update, ' Uhr', '')),
+      'dd.MM.yyyy, HH:mm'
+    ),
+    ''
+  ) AS last_update,
+  NULLIF(properties.recovered, '') AS recovered
+from
+  COVID_RAW.TBL_RKI_Corona_Landkreise
+WHERE
+  geometry.coordinates is not null
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_Corona_Landkreise USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_RKI_Corona_Landkreise/' AS
+SELECT
+  *
+FROM
+  covid_qualified.vw_RKI_Corona_Landkreise
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_Corona_Bundeslaender**
+
+-- COMMAND ----------
+
+CREATE
+OR REPLACE VIEW covid_qualified.VW_RKI_Corona_Bundeslaender AS
+SELECT
+  geometry.coordinates AS GEOMETRY,
+  NULLIF(properties.AGS_TXT, '') AS AGS_TXT,
+  NULLIF(properties.AdmUnitId, '')::INT AS AdmUnitId,
+  NULLIF(to_timestamp(replace(replace('2021-03-31T21:59:59Z','T',' '),'Z',''), 'yyyy-MM-dd HH:mm:ss'), '') AS Aktualisierung,
+  NULLIF(properties.Death, '')::INT AS Death,
+  NULLIF(properties.Fallzahl, '')::INT AS Fallzahl,
+  NULLIF(properties.GlobalID, '') AS GlobalID,
+  NULLIF(properties.LAN_ew_AGS, '') AS LAN_ew_AGS,
+  NULLIF(properties.LAN_ew_BEZ, '') AS LAN_ew_BEZ,
+  NULLIF(properties.LAN_ew_EWZ, '')::INT AS LAN_ew_EWZ,
+  NULLIF(properties.LAN_ew_GEN, '') AS LAN_ew_GEN,
+  NULLIF(properties.OBJECTID, '')::INT AS OBJECTID,
+  NULLIF(properties.OBJECTID_1, '')::INT AS OBJECTID_1,
+  NULLIF(properties.SHAPE_Area, '')::DECIMAL(38,20) AS SHAPE_Area,
+  NULLIF(properties.SHAPE_Length, '')::DECIMAL(38,20) AS SHAPE_Length,
+  NULLIF(properties.cases7_bl, '')::INT AS cases7_bl,
+  NULLIF(properties.cases7_bl_per_100k, '')::DECIMAL(38,20) AS cases7_bl_per_100k,
+  NULLIF(properties.cases7_bl_per_100k_txt, '')::DECIMAL(5,2) AS cases7_bl_per_100k_txt,
+  NULLIF(properties.death7_bl, '')::INT AS death7_bl,
+  NULLIF(properties.faelle_100000_EW, '')::DECIMAL(38,20) AS faelle_100000_EW
+FROM
+  COVID_RAW.TBL_RKI_Corona_Bundeslaender
+WHERE
+  geometry.coordinates is not null
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_Corona_Bundeslaender USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_RKI_Corona_Bundeslaender/' AS
+SELECT
+  *
+FROM
+  covid_qualified.vw_RKI_Corona_Bundeslaender
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **RKI_key_data**
+
+-- COMMAND ----------
+
+CREATE
+OR REPLACE VIEW covid_qualified.VW_RKI_key_data AS
+SELECT
+  NULLIF(properties.AdmUnitId, '') :: INT AS AdmUnitId,
+  NULLIF(properties.AnzAktiv, '') :: INT AS AnzAktiv,
+  NULLIF(properties.AnzAktivNeu, '') :: INT AS AnzAktivNeu,
+  NULLIF(properties.AnzFall, '') :: INT AS AnzFall,
+  NULLIF(properties.AnzFall7T, '') :: INT AS AnzFall7T,
+  NULLIF(properties.AnzFallNeu, '') :: INT AS AnzFallNeu,
+  NULLIF(properties.AnzGenesen, '') :: INT AS AnzGenesen,
+  NULLIF(properties.AnzGenesenNeu, '') :: INT AS AnzGenesenNeu,
+  NULLIF(properties.AnzTodesfall, '') :: INT AS AnzTodesfall,
+  NULLIF(properties.AnzTodesfallNeu, '') :: INT AS AnzTodesfallNeu,
+  NULLIF(properties.BundeslandId, '') :: INT AS BundeslandId,
+  NULLIF(properties.Inz7T, '') :: DECIMAL(10, 3) AS Inz7T,
+  NULLIF(properties.ObjectId, '') :: INT AS ObjectId
+FROM
+  COVID_RAW.TBL_RKI_key_data
+WHERE
+  properties is not null
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_key_data USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_RKI_key_data/' AS
+SELECT
+  *
+FROM
+  covid_qualified.vw_RKI_key_data
+
+-- COMMAND ----------
+
+
