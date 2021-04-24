@@ -90,6 +90,11 @@ for file in file_list:
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC OPTIMIZE COVID_RAW.TBL_csse_covid_19_daily_reports
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC **germany_vaccinations_timeseries_v2**
 
@@ -106,6 +111,11 @@ write_csv_into_raw(mnt_point_germany_vaccinations_timeseries_v2_Ingestion, mnt_p
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_germany_vaccinations_timeseries_v2
 # MAGIC USING DELTA
 # MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_germany_vaccinations_timeseries_v2/'
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC OPTIMIZE COVID_RAW.TBL_germany_vaccinations_timeseries_v2
 
 # COMMAND ----------
 
@@ -128,6 +138,11 @@ write_csv_into_raw(mnt_point_germany_deliveries_timeseries_v2_Ingestion, mnt_poi
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC OPTIMIZE COVID_RAW.TBL_germany_deliveries_timeseries_v2
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC **germany_vaccinations_by_state_v1**
 
@@ -144,6 +159,11 @@ write_csv_into_raw(mnt_point_germany_vaccinations_by_state_v1_Ingestion, mnt_poi
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_germany_vaccinations_by_state_v1
 # MAGIC USING DELTA
 # MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_germany_vaccinations_by_state_v1/'
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC OPTIMIZE COVID_RAW.TBL_germany_vaccinations_by_state_v1
 
 # COMMAND ----------
 
@@ -166,6 +186,11 @@ write_json_into_raw(mnt_point_RKI_Altersgruppen_Ingestion, mnt_point_RKI_Altersg
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC OPTIMIZE COVID_RAW.TBL_RKI_Altersgruppen
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC **RKI_COVID19**
 
@@ -182,6 +207,11 @@ write_json_into_raw(mnt_point_RKI_COVID19_Ingestion, mnt_point_RKI_COVID19_Raw)
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_COVID19
 # MAGIC USING DELTA
 # MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_RKI_COVID19/'
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC OPTIMIZE COVID_RAW.TBL_RKI_COVID19
 
 # COMMAND ----------
 
@@ -204,6 +234,11 @@ write_json_into_raw(mnt_point_RKI_Corona_Landkreise_Ingestion, mnt_point_RKI_Cor
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC OPTIMIZE COVID_RAW.TBL_RKI_Corona_Landkreise
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC **RKI_Corona_Bundeslaender**
 
@@ -220,6 +255,11 @@ write_json_into_raw(mnt_point_RKI_Corona_Bundeslaender_Ingestion, mnt_point_RKI_
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_Corona_Bundeslaender
 # MAGIC USING DELTA
 # MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_RKI_Corona_Bundeslaender/'
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC OPTIMIZE COVID_RAW.TBL_RKI_Corona_Bundeslaender
 
 # COMMAND ----------
 
@@ -242,6 +282,11 @@ write_json_into_raw(mnt_point_RKI_Data_Status_Ingestion, mnt_point_RKI_Data_Stat
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC OPTIMIZE COVID_RAW.TBL_RKI_Data_Status
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC **RKI_key_data**
 
@@ -261,6 +306,11 @@ write_json_into_raw(mnt_point_RKI_key_data_Ingestion, mnt_point_RKI_key_data_Raw
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC OPTIMIZE COVID_RAW.TBL_RKI_key_data
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC **RKI_history**
 
@@ -277,6 +327,11 @@ write_json_into_raw(mnt_point_RKI_history_Ingestion, mnt_point_RRKI_history_Raw)
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_history
 # MAGIC USING DELTA
 # MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_RKI_history/'
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC OPTIMIZE COVID_RAW.TBL_RKI_history
 
 # COMMAND ----------
 
