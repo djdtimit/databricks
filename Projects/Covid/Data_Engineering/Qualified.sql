@@ -19,7 +19,23 @@ SELECT
     WHEN last_update like '%/%'
     AND LENGTH(last_update) = 15 THEN NULLIF(to_timestamp(last_update, 'M/dd/yyyy HH:mm'), '')
     WHEN last_update like '%/%'
-    AND LENGTH(last_update) = 13 THEN NULLIF(to_timestamp(last_update, 'M/dd/yy HH:mm'), '')
+    AND LENGTH(last_update) = 14
+    AND SUBSTRING(last_update, 9, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yyyy HH:mm'), '')
+    WHEN last_update like '%/%'
+    AND LENGTH(last_update) = 14
+    AND SUBSTRING(last_update, 10, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yyyy H:mm'), '')
+    WHEN last_update like '%/%'
+    AND LENGTH(last_update) = 13
+    AND SUBSTRING(last_update, 8, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yy HH:mm'), '')
+    WHEN last_update like '%/%'
+    AND LENGTH(last_update) = 13
+    AND SUBSTRING(last_update, 9, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yyyy H:mm'), '')
+    WHEN last_update like '%/%'
+    AND LENGTH(last_update) = 12
+    AND SUBSTRING(last_update, 7, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yy HH:mm'), '')
+    WHEN last_update like '%/%'
+    AND LENGTH(last_update) = 12
+    AND SUBSTRING(last_update, 8, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yy H:mm'), '')
     WHEN last_update like '%/%'
     AND LENGTH(last_update) = 11 THEN NULLIF(to_timestamp(last_update, 'M/d/yy H:mm'), '')
     ELSE NULLIF(to_timestamp(last_update), '')
@@ -39,21 +55,11 @@ FROM
 
 -- COMMAND ----------
 
-SELECT * FROM covid_qualified.VW_csse_covid_19_daily_reports
-WHERE LAST_UPDATE IS NULL
-
--- COMMAND ----------
-
 CREATE TABLE IF NOT EXISTS covid_qualified.TBL_csse_covid_19_daily_reports USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_csse_covid_19_daily_reports/' AS
 SELECT
   *
 FROM
   covid_qualified.VW_csse_covid_19_daily_reports
-
--- COMMAND ----------
-
-SELECT DISTINCT last_update, length(last_update) from COVID_RAW.TBL_csse_covid_19_daily_reports
-order by length(last_update)
 
 -- COMMAND ----------
 

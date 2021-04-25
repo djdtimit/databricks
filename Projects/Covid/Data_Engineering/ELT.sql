@@ -26,51 +26,23 @@
 
 -- COMMAND ----------
 
-SELECT * FROM COVID_RAW.TBL_csse_covid_19_daily_reports
-WHERE _file_name like '%03-30-2020%'
-
--- COMMAND ----------
-
-TRUNCATE TABLE covid_qualified.TBL_csse_covid_19_daily_reports
-
--- COMMAND ----------
-
-SELECT * FROM covid_qualified.vw_csse_covid_19_daily_reports
-WHERE last_update is null
-
--- COMMAND ----------
-
-MERGE INTO covid_qualified.TBL_csse_covid_19_daily_reports T USING covid_qualified.VW_csse_covid_19_daily_reports S ON S.PROVINCE_STATE = T.PROVINCE_STATE
-AND S.COUNTRY_REGION = T.COUNTRY_REGION
-AND S.LAST_UPDATE = T.LAST_UPDATE
+MERGE INTO covid_qualified.TBL_csse_covid_19_daily_reports T USING covid_qualified.VW_csse_covid_19_daily_reports S ON S.COUNTRY_REGION = T.COUNTRY_REGION
+AND S._SOURCE = T._SOURCE
+WHEN MATCHED
 AND S.Admin2 = T.Admin2
-WHEN NOT MATCHED THEN
+AND S.Province_State = T.Province_State
+AND S.LAST_UPDATE > T.LAST_UPDATE THEN
+UPDATE
+SET
+  *
+  WHEN NOT MATCHED THEN
 INSERT
   *
 
 -- COMMAND ----------
 
-SELECT * FROM (
-SELECT province_state, country_region, last_update, Admin2, COUNT(*)
-FROM covid_qualified.TBL_csse_covid_19_daily_reports
-GROUP BY province_state, country_region, last_update, Admin2
-HAVING COUNT(*) > 1)
-order by province_state, country_region, last_update, Admin2
-
--- COMMAND ----------
-
-SELECT * FROM covid_qualified.TBL_csse_covid_19_daily_reports
-WHERE country_region = 'Afghanistan' AND to_date(last_update) = '2020-02-24' 
-
--- COMMAND ----------
-
-SELECT * FROM covid_qualified.vw_csse_covid_19_daily_reports
-WHERE country_region = 'Afghanistan' AND to_date(last_update) = '2020-02-24' 
-
--- COMMAND ----------
-
-SELECT COUNT(*) FROM covid_qualified.VW_csse_covid_19_daily_reports
--- WHERE PROVINCE_STATE IS NULL AND COUNTRY_REGION IS NULL AND LAST_UPDATE IS NULL AND ADMIN2 IS NULL
+SELECT * FROM covid_qualified.VW_csse_covid_19_daily_reports
+WHERE PROVINCE_STATE IS NOT NULL
 
 -- COMMAND ----------
 
