@@ -5,6 +5,9 @@ import os
 import requests
 import re
 import databricks.koalas as ks
+from github import Github
+import datetime
+import pytz
 
 # COMMAND ----------
 
@@ -122,26 +125,85 @@ csv_files = list(filter(fun, file))
 
 # COMMAND ----------
 
+csv_files
+
+# COMMAND ----------
+
 save_path_csse_covid_19_daily_reports = '/dbfs/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/'
 
 # COMMAND ----------
 
+g = Github(dbutils.secrets.get('Github', 'csse_covid_19'))
+repo_name = "CSSEGISandData/COVID-19"
+repo_path = "csse_covid_19_data/csse_covid_19_daily_reports/"
+repo = g.get_repo(repo_name)
+
+df_load_history = spark.sql('SELECT count(*) as c, MAX(last_load_ts) as last_load_ts from COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_history').collect()
+
+load_history_count = df_load_history[0].c
+
+
+if load_history_count == 0:
+  last_load_ts = datetime.datetime(2019, 4, 25)
+else:
+  last_load_ts = df_load_history[0].last_load_ts
+
+current_ts = datetime.datetime.now(pytz.timezone('Europe/Berlin'))
+
 counter = 0
 for csv_file in csv_files:
-  file_url = os.path.join(url.replace('github.com','raw.githubusercontent.com').replace('tree', ''), csv_file)
   
-  df_csv_file = pd.read_csv(file_url,sep=',',header=0,dtype=str)
-
-  print('Progress: ', counter / len(csv_files) * 100,'%')
-  counter += 1
-  
-  if not os.path.isdir(save_path_csse_covid_19_daily_reports):
-    os.makedirs(save_path_csse_covid_19_daily_reports)
+  commits = repo.get_commits(path=os.path.join(repo_path, csv_file))
+  last_commit_ts = commits[0].commit.committer.date
+  last_commit_message = commits[0].commit.message
     
-  target_path = os.path.join(save_path_csse_covid_19_daily_reports, csv_file)
-  print(target_path)
+  if last_load_ts < last_commit_ts:
   
-  df_csv_file.to_csv(target_path, index=False)
+    file_url = os.path.join(url.replace('github.com','raw.githubusercontent.com').replace('tree', ''), csv_file)
+
+    df_csv_file = pd.read_csv(file_url,sep=',',header=0,dtype=str)
+
+    counter += 1
+
+    if not os.path.isdir(save_path_csse_covid_19_daily_reports):
+      os.makedirs(save_path_csse_covid_19_daily_reports)
+
+    target_path = os.path.join(save_path_csse_covid_19_daily_reports, csv_file)
+    
+    df_csv_file.to_csv(target_path, index=False)
+    print('target_path: ', target_path)
+    
+    spark.sql(f"""INSERT INTO COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_history VALUES ('{csv_file}','{last_commit_message}',from_utc_timestamp('{current_ts}', 'Europe/Berlin'))""")
+
+  
+print('Number of loaded files: ', counter)
+
+spark.sql("""Optimize COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_history""")
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE DATABASE IF NOT EXISTS COVID_INGESTION
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE TABLE IF NOT EXISTS COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_history (
+# MAGIC file_name STRING,
+# MAGIC last_commit_message STRING,
+# MAGIC last_load_ts TIMESTAMP)
+# MAGIC USING DELTA
+# MAGIC LOCATION '/mnt/kaggle/Covid/Ingestion/TBL_csse_covid_19_daily_reports_load_history/'
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC TRUNCATE table COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_history
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_history
 
 # COMMAND ----------
 
