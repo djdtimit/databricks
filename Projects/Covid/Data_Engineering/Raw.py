@@ -95,6 +95,11 @@ for file in file_list:
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC DESCRIBE DETAIL COVID_RAW.TBL_csse_covid_19_daily_reports
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC **germany_vaccinations_timeseries_v2**
 
