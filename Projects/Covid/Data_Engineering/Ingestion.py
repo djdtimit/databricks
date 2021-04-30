@@ -194,8 +194,3 @@ spark.sql("""Optimize COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_histo
 # MAGIC last_load_ts TIMESTAMP)
 # MAGIC USING DELTA
 # MAGIC LOCATION '/mnt/covid/Ingestion/TBL_csse_covid_19_daily_reports_load_history/'
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC TRUNCATE TABLE COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_history

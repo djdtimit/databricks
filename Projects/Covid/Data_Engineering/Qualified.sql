@@ -8,6 +8,11 @@ CREATE DATABASE covid_qualified
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC da append -> deduplizieren
+
+-- COMMAND ----------
+
 CREATE
 OR REPLACE VIEW covid_qualified.VW_csse_covid_19_daily_reports AS
 SELECT
@@ -55,7 +60,7 @@ FROM
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_csse_covid_19_daily_reports USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_csse_covid_19_daily_reports/' AS
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_csse_covid_19_daily_reports USING DELTA LOCATION '/mnt/covid/Qualified/TBL_csse_covid_19_daily_reports/' AS
 SELECT
   *
 FROM
@@ -100,7 +105,7 @@ FROM
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_germany_vaccinations_timeseries_v2 USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_germany_vaccinations_timeseries_v2/' AS
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_germany_vaccinations_timeseries_v2 USING DELTA LOCATION '/mnt/covid/Qualified/TBL_germany_vaccinations_timeseries_v2/' AS
 SELECT
   *
 FROM
@@ -129,7 +134,7 @@ from
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_germany_deliveries_timeseries_v2 USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_germany_deliveries_timeseries_v2/' AS
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_germany_deliveries_timeseries_v2 USING DELTA LOCATION '/mnt/covid/Qualified/TBL_germany_deliveries_timeseries_v2/' AS
 SELECT
   *
 FROM
@@ -158,7 +163,7 @@ FROM
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_germany_vaccinations_by_state_v1 USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_germany_vaccinations_by_state_v1/' AS
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_germany_vaccinations_by_state_v1 USING DELTA LOCATION '/mnt/covid/Qualified/TBL_germany_vaccinations_by_state_v1/' AS
 SELECT
   *
 FROM
@@ -197,7 +202,7 @@ WHERE
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_Altersgruppen USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_RKI_Altersgruppen/' AS
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_Altersgruppen USING DELTA LOCATION '/mnt/covid/Qualified/TBL_RKI_Altersgruppen/' AS
 SELECT
   *
 FROM
@@ -248,7 +253,7 @@ WHERE
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_COVID19 USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_RKI_COVID19/' AS
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_COVID19 USING DELTA LOCATION '/mnt/covid/Qualified/TBL_RKI_COVID19/' AS
 SELECT
   *
 FROM
@@ -332,7 +337,7 @@ WHERE
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_Corona_Landkreise USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_RKI_Corona_Landkreise/' AS
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_Corona_Landkreise USING DELTA LOCATION '/mnt/covid/Qualified/TBL_RKI_Corona_Landkreise/' AS
 SELECT
   *
 FROM
@@ -385,7 +390,7 @@ WHERE
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_Corona_Bundeslaender USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_RKI_Corona_Bundeslaender/' AS
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_Corona_Bundeslaender USING DELTA LOCATION '/mnt/covid/Qualified/TBL_RKI_Corona_Bundeslaender/' AS
 SELECT
   *
 FROM
@@ -425,7 +430,7 @@ WHERE
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_key_data USING DELTA LOCATION '/mnt/kaggle/Covid/Qualified/TBL_RKI_key_data/' AS
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_RKI_key_data USING DELTA LOCATION '/mnt/covid/Qualified/TBL_RKI_key_data/' AS
 SELECT
   *
 FROM
