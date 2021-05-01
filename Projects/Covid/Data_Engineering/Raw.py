@@ -39,7 +39,7 @@ def rename_columns(s) -> str:
     new_column = 'Incidence_Rate'
   return new_column
 
-mount_point = '/mnt/kaggle/Covid/Ingestion/csse_covid_19_daily_reports/'
+mount_point = '/mnt/covid/Ingestion/csse_covid_19_daily_reports/'
 
 file_list = [file.name for file in dbutils.fs.ls("dbfs:{}".format(mount_point))]
 
@@ -77,7 +77,7 @@ for file in file_list:
     
   df_final = df_renamed[["FIPS","Admin2","Province_State","Country_Region","Last_Update","Latitude","Longitude","Confirmed","Deaths","Recovered","Active","Combined_Key","Incidence_Rate","Case_Fatality_Ratio","_source"]]
   
-  df_final.to_delta(path= '/mnt/kaggle/Covid/Raw/TBL_csse_covid_19_daily_reports/',mode='append', index=False)
+  df_final.to_delta(path= '/mnt/covid/Raw/TBL_csse_covid_19_daily_reports/',mode='append', index=False)
   
   
 
@@ -86,7 +86,7 @@ for file in file_list:
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_csse_covid_19_daily_reports
 # MAGIC USING DELTA
-# MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_csse_covid_19_daily_reports/'
+# MAGIC LOCATION '/mnt/covid/Raw/TBL_csse_covid_19_daily_reports/'
 
 # COMMAND ----------
 
@@ -100,8 +100,8 @@ for file in file_list:
 
 # COMMAND ----------
 
-mnt_point_germany_vaccinations_timeseries_v2_Ingestion = '/mnt/kaggle/Covid/Ingestion/germany_vaccinations_timeseries_v2/'
-mnt_point_germany_vaccinations_timeseries_v2_Raw = '/mnt/kaggle/Covid/Raw/TBL_germany_vaccinations_timeseries_v2/'
+mnt_point_germany_vaccinations_timeseries_v2_Ingestion = '/mnt/covid/Ingestion/germany_vaccinations_timeseries_v2/'
+mnt_point_germany_vaccinations_timeseries_v2_Raw = '/mnt/covid/Raw/TBL_germany_vaccinations_timeseries_v2/'
 
 write_csv_into_raw(mnt_point_germany_vaccinations_timeseries_v2_Ingestion, mnt_point_germany_vaccinations_timeseries_v2_Raw)
 
@@ -110,7 +110,7 @@ write_csv_into_raw(mnt_point_germany_vaccinations_timeseries_v2_Ingestion, mnt_p
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_germany_vaccinations_timeseries_v2
 # MAGIC USING DELTA
-# MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_germany_vaccinations_timeseries_v2/'
+# MAGIC LOCATION '/mnt/covid/Raw/TBL_germany_vaccinations_timeseries_v2/'
 
 # COMMAND ----------
 
@@ -124,8 +124,8 @@ write_csv_into_raw(mnt_point_germany_vaccinations_timeseries_v2_Ingestion, mnt_p
 
 # COMMAND ----------
 
-mnt_point_germany_deliveries_timeseries_v2_Ingestion = '/mnt/kaggle/Covid/Ingestion/germany_deliveries_timeseries_v2/'
-mnt_point_germany_deliveries_timeseries_v2_Raw = '/mnt/kaggle/Covid/Raw/TBL_germany_deliveries_timeseries_v2/'
+mnt_point_germany_deliveries_timeseries_v2_Ingestion = '/mnt/covid/Ingestion/germany_deliveries_timeseries_v2/'
+mnt_point_germany_deliveries_timeseries_v2_Raw = '/mnt/covid/Raw/TBL_germany_deliveries_timeseries_v2/'
 
 write_csv_into_raw(mnt_point_germany_deliveries_timeseries_v2_Ingestion, mnt_point_germany_deliveries_timeseries_v2_Raw)
 
@@ -134,7 +134,7 @@ write_csv_into_raw(mnt_point_germany_deliveries_timeseries_v2_Ingestion, mnt_poi
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_germany_deliveries_timeseries_v2
 # MAGIC USING DELTA
-# MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_germany_deliveries_timeseries_v2/'
+# MAGIC LOCATION '/mnt/covid/Raw/TBL_germany_deliveries_timeseries_v2/'
 
 # COMMAND ----------
 
@@ -148,8 +148,8 @@ write_csv_into_raw(mnt_point_germany_deliveries_timeseries_v2_Ingestion, mnt_poi
 
 # COMMAND ----------
 
-mnt_point_germany_vaccinations_by_state_v1_Ingestion = '/mnt/kaggle/Covid/Ingestion/germany_vaccinations_by_state_v1/'
-mnt_point_germany_vaccinations_by_state_v1_Raw = '/mnt/kaggle/Covid/Raw/TBL_germany_vaccinations_by_state_v1/'
+mnt_point_germany_vaccinations_by_state_v1_Ingestion = '/mnt/covid/Ingestion/germany_vaccinations_by_state_v1/'
+mnt_point_germany_vaccinations_by_state_v1_Raw = '/mnt/covid/Raw/TBL_germany_vaccinations_by_state_v1/'
 
 write_csv_into_raw(mnt_point_germany_vaccinations_by_state_v1_Ingestion, mnt_point_germany_vaccinations_by_state_v1_Raw)
 
@@ -158,7 +158,7 @@ write_csv_into_raw(mnt_point_germany_vaccinations_by_state_v1_Ingestion, mnt_poi
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_germany_vaccinations_by_state_v1
 # MAGIC USING DELTA
-# MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_germany_vaccinations_by_state_v1/'
+# MAGIC LOCATION '/mnt/covid/Raw/TBL_germany_vaccinations_by_state_v1/'
 
 # COMMAND ----------
 
@@ -172,8 +172,8 @@ write_csv_into_raw(mnt_point_germany_vaccinations_by_state_v1_Ingestion, mnt_poi
 
 # COMMAND ----------
 
-mnt_point_RKI_Altersgruppen_Ingestion = '/mnt/kaggle/Covid/Ingestion/RKI_Altersgruppen/'
-mnt_point_RKI_Altersgruppen_Raw = '/mnt/kaggle/Covid/Raw/TBL_RKI_Altersgruppen/'
+mnt_point_RKI_Altersgruppen_Ingestion = '/mnt/covid/Ingestion/RKI_Altersgruppen/'
+mnt_point_RKI_Altersgruppen_Raw = '/mnt/covid/Raw/TBL_RKI_Altersgruppen/'
 
 write_json_into_raw(mnt_point_RKI_Altersgruppen_Ingestion, mnt_point_RKI_Altersgruppen_Raw)
 
@@ -182,7 +182,7 @@ write_json_into_raw(mnt_point_RKI_Altersgruppen_Ingestion, mnt_point_RKI_Altersg
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_Altersgruppen
 # MAGIC USING DELTA
-# MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_RKI_Altersgruppen/'
+# MAGIC LOCATION '/mnt/covid/Raw/TBL_RKI_Altersgruppen/'
 
 # COMMAND ----------
 
@@ -196,8 +196,8 @@ write_json_into_raw(mnt_point_RKI_Altersgruppen_Ingestion, mnt_point_RKI_Altersg
 
 # COMMAND ----------
 
-mnt_point_RKI_COVID19_Ingestion = '/mnt/kaggle/Covid/Ingestion/RKI_COVID19/'
-mnt_point_RKI_COVID19_Raw = '/mnt/kaggle/Covid/Raw/TBL_RKI_COVID19/'
+mnt_point_RKI_COVID19_Ingestion = '/mnt/covid/Ingestion/RKI_COVID19/'
+mnt_point_RKI_COVID19_Raw = '/mnt/covid/Raw/TBL_RKI_COVID19/'
 
 write_json_into_raw(mnt_point_RKI_COVID19_Ingestion, mnt_point_RKI_COVID19_Raw)
 
@@ -206,7 +206,7 @@ write_json_into_raw(mnt_point_RKI_COVID19_Ingestion, mnt_point_RKI_COVID19_Raw)
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_COVID19
 # MAGIC USING DELTA
-# MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_RKI_COVID19/'
+# MAGIC LOCATION '/mnt/covid/Raw/TBL_RKI_COVID19/'
 
 # COMMAND ----------
 
@@ -220,8 +220,8 @@ write_json_into_raw(mnt_point_RKI_COVID19_Ingestion, mnt_point_RKI_COVID19_Raw)
 
 # COMMAND ----------
 
-mnt_point_RKI_Corona_Landkreise_Ingestion = '/mnt/kaggle/Covid/Ingestion/RKI_Corona_Landkreise/'
-mnt_point_RKI_Corona_Landkreise_Raw = '/mnt/kaggle/Covid/Raw/TBL_RKI_Corona_Landkreise/'
+mnt_point_RKI_Corona_Landkreise_Ingestion = '/mnt/covid/Ingestion/RKI_Corona_Landkreise/'
+mnt_point_RKI_Corona_Landkreise_Raw = '/mnt/covid/Raw/TBL_RKI_Corona_Landkreise/'
 
 write_json_into_raw(mnt_point_RKI_Corona_Landkreise_Ingestion, mnt_point_RKI_Corona_Landkreise_Raw)
 
@@ -230,7 +230,7 @@ write_json_into_raw(mnt_point_RKI_Corona_Landkreise_Ingestion, mnt_point_RKI_Cor
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_Corona_Landkreise
 # MAGIC USING DELTA
-# MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_RKI_Corona_Landkreise/'
+# MAGIC LOCATION '/mnt/covid/Raw/TBL_RKI_Corona_Landkreise/'
 
 # COMMAND ----------
 
@@ -244,8 +244,8 @@ write_json_into_raw(mnt_point_RKI_Corona_Landkreise_Ingestion, mnt_point_RKI_Cor
 
 # COMMAND ----------
 
-mnt_point_RKI_Corona_Bundeslaender_Ingestion = '/mnt/kaggle/Covid/Ingestion/RKI_Corona_Bundeslaender/'
-mnt_point_RKI_Corona_Bundeslaender_Raw = '/mnt/kaggle/Covid/Raw/TBL_RKI_Corona_Bundeslaender/'
+mnt_point_RKI_Corona_Bundeslaender_Ingestion = '/mnt/covid/Ingestion/RKI_Corona_Bundeslaender/'
+mnt_point_RKI_Corona_Bundeslaender_Raw = '/mnt/covid/Raw/TBL_RKI_Corona_Bundeslaender/'
 
 write_json_into_raw(mnt_point_RKI_Corona_Bundeslaender_Ingestion, mnt_point_RKI_Corona_Bundeslaender_Raw)
 
@@ -254,7 +254,7 @@ write_json_into_raw(mnt_point_RKI_Corona_Bundeslaender_Ingestion, mnt_point_RKI_
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_Corona_Bundeslaender
 # MAGIC USING DELTA
-# MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_RKI_Corona_Bundeslaender/'
+# MAGIC LOCATION '/mnt/covid/Raw/TBL_RKI_Corona_Bundeslaender/'
 
 # COMMAND ----------
 
@@ -268,8 +268,8 @@ write_json_into_raw(mnt_point_RKI_Corona_Bundeslaender_Ingestion, mnt_point_RKI_
 
 # COMMAND ----------
 
-mnt_point_RKI_Data_Status_Ingestion = '/mnt/kaggle/Covid/Ingestion/RKI_Data_Status/'
-mnt_point_RKI_Data_Status_Raw = '/mnt/kaggle/Covid/Raw/TBL_RKI_Data_Status/'
+mnt_point_RKI_Data_Status_Ingestion = '/mnt/covid/Ingestion/RKI_Data_Status/'
+mnt_point_RKI_Data_Status_Raw = '/mnt/covid/Raw/TBL_RKI_Data_Status/'
 
 write_json_into_raw(mnt_point_RKI_Data_Status_Ingestion, mnt_point_RKI_Data_Status_Raw)
 
@@ -278,7 +278,7 @@ write_json_into_raw(mnt_point_RKI_Data_Status_Ingestion, mnt_point_RKI_Data_Stat
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_Data_Status
 # MAGIC USING DELTA
-# MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_RKI_Data_Status/'
+# MAGIC LOCATION '/mnt/covid/Raw/TBL_RKI_Data_Status/'
 
 # COMMAND ----------
 
@@ -292,8 +292,8 @@ write_json_into_raw(mnt_point_RKI_Data_Status_Ingestion, mnt_point_RKI_Data_Stat
 
 # COMMAND ----------
 
-mnt_point_RKI_key_data_Ingestion = '/mnt/kaggle/Covid/Ingestion/RKI_key_data/'
-mnt_point_RKI_key_data_Raw = '/mnt/kaggle/Covid/Raw/TBL_RKI_key_data/'
+mnt_point_RKI_key_data_Ingestion = '/mnt/covid/Ingestion/RKI_key_data/'
+mnt_point_RKI_key_data_Raw = '/mnt/covid/Raw/TBL_RKI_key_data/'
 
 write_json_into_raw(mnt_point_RKI_key_data_Ingestion, mnt_point_RKI_key_data_Raw)
 
@@ -302,7 +302,7 @@ write_json_into_raw(mnt_point_RKI_key_data_Ingestion, mnt_point_RKI_key_data_Raw
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_key_data
 # MAGIC USING DELTA
-# MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_RKI_key_data/'
+# MAGIC LOCATION '/mnt/covid/Raw/TBL_RKI_key_data/'
 
 # COMMAND ----------
 
@@ -316,8 +316,8 @@ write_json_into_raw(mnt_point_RKI_key_data_Ingestion, mnt_point_RKI_key_data_Raw
 
 # COMMAND ----------
 
-mnt_point_RKI_history_Ingestion = '/mnt/kaggle/Covid/Ingestion/RKI_history/'
-mnt_point_RRKI_history_Raw = '/mnt/kaggle/Covid/Raw/TBL_RKI_history/'
+mnt_point_RKI_history_Ingestion = '/mnt/covid/Ingestion/RKI_history/'
+mnt_point_RRKI_history_Raw = '/mnt/covid/Raw/TBL_RKI_history/'
 
 write_json_into_raw(mnt_point_RKI_history_Ingestion, mnt_point_RRKI_history_Raw)
 
@@ -326,7 +326,7 @@ write_json_into_raw(mnt_point_RKI_history_Ingestion, mnt_point_RRKI_history_Raw)
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_RKI_history
 # MAGIC USING DELTA
-# MAGIC LOCATION '/mnt/kaggle/Covid/Raw/TBL_RKI_history/'
+# MAGIC LOCATION '/mnt/covid/Raw/TBL_RKI_history/'
 
 # COMMAND ----------
 

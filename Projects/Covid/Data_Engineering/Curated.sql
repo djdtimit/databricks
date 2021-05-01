@@ -152,6 +152,65 @@ CURRENT_TIMESTAMP
 -- COMMAND ----------
 
 -- MAGIC %md
+-- MAGIC Beschreibung der Daten des RKI Covid-19-Dashboards (https://corona.rki.de)
+-- MAGIC 
+-- MAGIC Dem Dashboard liegen aggregierte Daten der gemäß IfSG von den Gesundheitsämtern an das RKI übermittelten Covid-19-Fälle zu Grunde
+-- MAGIC Mit den Daten wird der tagesaktuelle Stand (00:00 Uhr) abgebildet und es werden die Veränderungen bei den Fällen und Todesfällen zum Vortag dargstellt
+-- MAGIC In der Datenquelle sind folgende Parameter enthalten:
+-- MAGIC 
+-- MAGIC - IdBundesland: Id des Bundeslands des Falles mit 1=Schleswig-Holstein bis 16=Thüringen
+-- MAGIC - Bundesland: Name des Bundeslanes
+-- MAGIC - Landkreis ID: Id des Landkreises des Falles in der üblichen Kodierung 1001 bis 16077=LK Altenburger Land
+-- MAGIC - Landkreis: Name des Landkreises
+-- MAGIC - Altersgruppe: Altersgruppe des Falles aus den 6 Gruppe 0-4, 5-14, 15-34, 35-59, 60-79, 80+ sowie unbekannt
+-- MAGIC - Altersgruppe2: Altersgruppe des Falles aus 5-Jahresgruppen 0-4, 5-9, 10-14, ..., 75-79, 80+ sowie unbekannt
+-- MAGIC - Geschlecht: Geschlecht des Falles M0männlich, W=weiblich und unbekannt
+-- MAGIC - AnzahlFall: Anzahl der Fälle in der entsprechenden Gruppe
+-- MAGIC - AnzahlTodesfall: Anzahl der Todesfälle in der entsprechenden Gruppe
+-- MAGIC - Meldedatum: Datum, wann der Fall dem Gesundheitsamt bekannt geworden ist
+-- MAGIC - Datenstand: Datum, wann der Datensatz zuletzt aktualisiert worden ist
+-- MAGIC - NeuerFall: 
+-- MAGIC 0: Fall ist in der Publikation für den aktuellen Tag und in der für den Vortag enthalten
+-- MAGIC 1: Fall ist nur in der aktuellen Publikation enthalten
+-- MAGIC -1: Fall ist nur in der Publikation des Vortags enthalten
+-- MAGIC damit ergibt sich: Anzahl Fälle der aktuellen Publikation als Summe(AnzahlFall), wenn NeuerFall in (0,1); Delta zum Vortag als Summe(AnzahlFall) wenn NeuerFall in (-1,1)
+-- MAGIC - NeuerTodesfall:
+-- MAGIC 0: Fall ist in der Publikation für den aktuellen Tag und in der für den Vortag jeweils ein Todesfall
+-- MAGIC 1: Fall ist in der aktuellen Publikation ein Todesfall, nicht jedoch in der Publikation des Vortages
+-- MAGIC -1: Fall ist in der aktuellen Publikation kein Todesfall, jedoch war er in der Publikation des Vortags ein Todesfall
+-- MAGIC -9: Fall ist weder in der aktuellen Publikation noch in der des Vortages ein Todesfall
+-- MAGIC damit ergibt sich: Anzahl Todesfälle der aktuellen Publikation als Summe(AnzahlTodesfall) wenn NeuerTodesfall in (0,1); Delta zum Vortag als Summe(AnzahlTodesfall) wenn NeuerTodesfall in (-1,1)
+-- MAGIC - Referenzdatum: Erkrankungsdatum bzw. wenn das nicht bekannt ist, das Meldedatum
+-- MAGIC - AnzahlGenesen: Anzahl der Genesenen in der entsprechenden Gruppe
+-- MAGIC - NeuGenesen:
+-- MAGIC 0: Fall ist in der Publikation für den aktuellen Tag und in der für den Vortag jeweils Genesen
+-- MAGIC 1: Fall ist in der aktuellen Publikation Genesen, nicht jedoch in der Publikation des Vortages
+-- MAGIC -1: Fall ist in der aktuellen Publikation nicht Genesen, jedoch war er in der Publikation des Vortags Genesen
+-- MAGIC -9: Fall ist weder in der aktuellen Publikation noch in der des Vortages Genesen 
+-- MAGIC damit ergibt sich: Anzahl Genesen der aktuellen Publikation als Summe(AnzahlGenesen) wenn NeuGenesen in (0,1); Delta zum Vortag als Summe(AnzahlGenesen) wenn NeuGenesen in (-1,1)
+-- MAGIC - IstErkrankungsbeginn: 1, wenn das Refdatum der Erkrankungsbeginn ist, 0 sonst
+
+-- COMMAND ----------
+
+SELECT * FROM covid_qualified.TBL_RKI_COVID19
+
+-- COMMAND ----------
+
+SELECT DATE(MELDEDATUM), sum(ANZAHLFALL) FROM covid_qualified.TBL_RKI_COVID19
+group by DATE(MELDEDATUM)
+order by DATE(MELDEDATUM)
+
+-- COMMAND ----------
+
+SELECT count(*) FROM covid_qualified.TBL_RKI_COVID19
+
+-- COMMAND ----------
+
+SELECT sum(properties.NeuerFall) FROM COVID_RAW.TBL_RKI_COVID19
+
+-- COMMAND ----------
+
+-- MAGIC %md
 -- MAGIC **Covid_DE**
 
 -- COMMAND ----------
