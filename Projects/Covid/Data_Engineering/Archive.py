@@ -16,3 +16,7 @@ for database_object in database_objects:
     if source_path in listed_files_paths:
       dbutils.fs.mv(source_path, target_path)
     
+
+# COMMAND ----------
+
+
