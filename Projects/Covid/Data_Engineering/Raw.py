@@ -1,12 +1,13 @@
 # Databricks notebook source
 import databricks.koalas as ks
-from pyspark.sql.functions import input_file_name
+from pyspark.sql.functions import input_file_name, current_timestamp, from_utc_timestamp
 
 # COMMAND ----------
 
 def write_csv_into_raw(ingestion_load_path, raw_save_path):
   df = ks.read_csv(ingestion_load_path,dtype=str)
   df['_source'] = input_file_name()
+  df['_insert_TS'] = from_utc_timestamp(current_timestamp(), 'Europe/Berlin')
   df.to_delta(raw_save_path,mode='overwrite', index=False)
 
 # COMMAND ----------
@@ -14,6 +15,7 @@ def write_csv_into_raw(ingestion_load_path, raw_save_path):
 def write_json_into_raw(ingestion_load_path, raw_save_path):
   df = ks.read_json(ingestion_load_path,dtype=str)
   df['_source'] = input_file_name()
+  df['_insert_TS'] = from_utc_timestamp(current_timestamp(), 'Europe/Berlin')
   df.to_delta(raw_save_path,mode='overwrite', index=False)
 
 # COMMAND ----------
@@ -77,6 +79,9 @@ for file in file_list:
     
   df_final = df_renamed[["FIPS","Admin2","Province_State","Country_Region","Last_Update","Latitude","Longitude","Confirmed","Deaths","Recovered","Active","Combined_Key","Incidence_Rate","Case_Fatality_Ratio","_source"]]
   
+  df_final['_insert_TS'] = from_utc_timestamp(current_timestamp(), 'Europe/Berlin')
+
+  
   df_final.to_delta(path= '/mnt/covid/Raw/TBL_csse_covid_19_daily_reports/',mode='append', index=False)
   
   
@@ -87,6 +92,11 @@ for file in file_list:
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_csse_covid_19_daily_reports
 # MAGIC USING DELTA
 # MAGIC LOCATION '/mnt/covid/Raw/TBL_csse_covid_19_daily_reports/'
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM COVID_RAW.TBL_csse_covid_19_daily_reports
 
 # COMMAND ----------
 
