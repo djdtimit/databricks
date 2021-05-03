@@ -1,4 +1,9 @@
 -- Databricks notebook source
+-- MAGIC %sql
+-- MAGIC set spark.databricks.delta.properties.defaults.enableChangeDataFeed = true;
+
+-- COMMAND ----------
+
 CREATE DATABASE covid_qualified
 
 -- COMMAND ----------
@@ -8,63 +13,143 @@ CREATE DATABASE covid_qualified
 
 -- COMMAND ----------
 
--- MAGIC %md
--- MAGIC da append -> deduplizieren
-
--- COMMAND ----------
-
 CREATE
-OR REPLACE VIEW covid_qualified.VW_csse_covid_19_daily_reports AS
+OR REPLACE VIEW covid_qualified.VW_csse_covid_19_daily_reports AS WITH VALIDATION AS (
+  SELECT
+    NULLIF(FIPS, '') :: INT AS FIPS,
+    NULLIF(NULLIF(Admin2, ''), 'None') AS Admin2,
+    NULLIF(NULLIF(Province_State, ''), 'None') AS Province_State,
+    NULLIF(Country_Region, '') AS Country_Region,
+    CASE
+      WHEN last_update like '%/%'
+      AND LENGTH(last_update) = 15 THEN NULLIF(to_timestamp(last_update, 'M/dd/yyyy HH:mm'), '')
+      WHEN last_update like '%/%'
+      AND LENGTH(last_update) = 14
+      AND SUBSTRING(last_update, 9, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yyyy HH:mm'), '')
+      WHEN last_update like '%/%'
+      AND LENGTH(last_update) = 14
+      AND SUBSTRING(last_update, 10, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yyyy H:mm'), '')
+      WHEN last_update like '%/%'
+      AND LENGTH(last_update) = 13
+      AND SUBSTRING(last_update, 8, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yy HH:mm'), '')
+      WHEN last_update like '%/%'
+      AND LENGTH(last_update) = 13
+      AND SUBSTRING(last_update, 9, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yyyy H:mm'), '')
+      WHEN last_update like '%/%'
+      AND LENGTH(last_update) = 12
+      AND SUBSTRING(last_update, 7, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yy HH:mm'), '')
+      WHEN last_update like '%/%'
+      AND LENGTH(last_update) = 12
+      AND SUBSTRING(last_update, 8, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yy H:mm'), '')
+      WHEN last_update like '%/%'
+      AND LENGTH(last_update) = 11 THEN NULLIF(to_timestamp(last_update, 'M/d/yy H:mm'), '')
+      ELSE NULLIF(to_timestamp(last_update), '')
+    END AS Last_Update,
+    NULLIF(Latitude, '') :: DECIMAL(38, 15) AS Latitude,
+    NULLIF(Longitude, '') :: DECIMAL(38, 15) AS Longitude,
+    NULLIF(Confirmed, '') :: INT AS Confirmed,
+    NULLIF(Deaths, '') :: INT AS Deaths,
+    NULLIF(Recovered, '') :: INT AS Recovered,
+    NULLIF(Active, '') :: INT AS Active,
+    NULLIF(Combined_Key, '') AS Combined_Key,
+    NULLIF(Incidence_Rate, '') :: DECIMAL(38, 15) AS Incidence_Rate,
+    NULLIF(Case_Fatality_Ratio, '') :: DECIMAL(38, 15) AS Case_Fatality_Ratio,
+    _source,
+    _insert_TS
+  FROM
+    COVID_RAW.TBL_csse_covid_19_daily_reports
+),
+DEDUPLICATION AS (
+  SELECT
+    FIPS,
+    Admin2,
+    Province_State,
+    Country_Region,
+    last_update,
+    Latitude,
+    Longitude,
+    Confirmed,
+    Deaths,
+    Recovered,
+    Active,
+    Combined_Key,
+    Incidence_Rate,
+    Case_Fatality_Ratio,
+    _source,
+    _insert_TS,
+    ROW_NUMBER() OVER (
+      PARTITION BY ADMIN2,
+      Province_State,
+      Country_Region,
+      last_update
+      ORDER BY
+        _insert_TS DESC
+    ) AS ROW_NUMBER
+  FROM
+    VALIDATION
+)
 SELECT
-  NULLIF(FIPS, '') :: INT AS FIPS,
-  NULLIF(NULLIF(Admin2, ''), 'None') AS Admin2,
-  NULLIF(NULLIF(Province_State, ''), 'None') AS Province_State,
-  NULLIF(Country_Region, '') AS Country_Region,
-  CASE
-    WHEN last_update like '%/%'
-    AND LENGTH(last_update) = 15 THEN NULLIF(to_timestamp(last_update, 'M/dd/yyyy HH:mm'), '')
-    WHEN last_update like '%/%'
-    AND LENGTH(last_update) = 14
-    AND SUBSTRING(last_update, 9, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yyyy HH:mm'), '')
-    WHEN last_update like '%/%'
-    AND LENGTH(last_update) = 14
-    AND SUBSTRING(last_update, 10, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yyyy H:mm'), '')
-    WHEN last_update like '%/%'
-    AND LENGTH(last_update) = 13
-    AND SUBSTRING(last_update, 8, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yy HH:mm'), '')
-    WHEN last_update like '%/%'
-    AND LENGTH(last_update) = 13
-    AND SUBSTRING(last_update, 9, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yyyy H:mm'), '')
-    WHEN last_update like '%/%'
-    AND LENGTH(last_update) = 12
-    AND SUBSTRING(last_update, 7, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yy HH:mm'), '')
-    WHEN last_update like '%/%'
-    AND LENGTH(last_update) = 12
-    AND SUBSTRING(last_update, 8, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yy H:mm'), '')
-    WHEN last_update like '%/%'
-    AND LENGTH(last_update) = 11 THEN NULLIF(to_timestamp(last_update, 'M/d/yy H:mm'), '')
-    ELSE NULLIF(to_timestamp(last_update), '')
-  END AS Last_Update,
-  NULLIF(Latitude, '') :: DECIMAL(38, 15) AS Latitude,
-  NULLIF(Longitude, '') :: DECIMAL(38, 15) AS Longitude,
-  NULLIF(Confirmed, '') :: INT AS Confirmed,
-  NULLIF(Deaths, '') :: INT AS Deaths,
-  NULLIF(Recovered, '') :: INT AS Recovered,
-  NULLIF(Active, '') :: INT AS Active,
-  NULLIF(Combined_Key, '') AS Combined_Key,
-  NULLIF(Incidence_Rate, '') :: DECIMAL(38, 15) AS Incidence_Rate,
-  NULLIF(Case_Fatality_Ratio, '') :: DECIMAL(38, 15) AS Case_Fatality_Ratio,
-  _source
+  FIPS,
+  Admin2,
+  Province_State,
+  Country_Region,
+  last_update,
+  Latitude,
+  Longitude,
+  Confirmed,
+  Deaths,
+  Recovered,
+  Active,
+  Combined_Key,
+  Incidence_Rate,
+  Case_Fatality_Ratio,
+  _source,
+  _insert_TS
 FROM
-  COVID_RAW.TBL_csse_covid_19_daily_reports
+  DEDUPLICATION
+WHERE
+  ROW_NUMBER = 1
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS covid_qualified.TBL_csse_covid_19_daily_reports USING DELTA LOCATION '/mnt/covid/Qualified/TBL_csse_covid_19_daily_reports/' AS
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_csse_covid_19_daily_reports USING DELTA LOCATION '/mnt/covid/Qualified/TBL_csse_covid_19_daily_reports/' TBLPROPERTIES (delta.enableChangeDataFeed = true) AS
 SELECT
   *
 FROM
   covid_qualified.VW_csse_covid_19_daily_reports
+
+
+-- COMMAND ----------
+
+MERGE INTO covid_qualified.TBL_csse_covid_19_daily_reports AS T USING covid_qualified.VW_csse_covid_19_daily_reports AS S 
+ON (
+  T.ADMIN2 = S.ADMIN2
+  OR (
+    T.ADMIN2 IS NULL
+    AND S.ADMIN2 IS NULL
+  )
+)
+AND (
+  T.Province_State = S.Province_State
+  OR (
+    T.Province_State IS NULL
+    AND S.Province_State IS NULL
+  )
+)
+AND T.Country_Region = S.Country_Region
+AND T.last_update = S.last_update
+WHEN MATCHED
+AND datediff(CURRENT_TIMESTAMP, S._INSERT_TS) <= 14 THEN
+UPDATE
+SET
+  *
+  WHEN NOT MATCHED THEN
+INSERT
+  *
+
+-- COMMAND ----------
+
+OPTIMIZE covid_qualified.TBL_csse_covid_19_daily_reports
 
 -- COMMAND ----------
 
@@ -99,7 +184,9 @@ select
   NULLIF(indikation_alter_voll, '') :: INT AS indikation_alter_voll,
   NULLIF(indikation_beruf_voll, '') :: INT AS indikation_beruf_voll,
   NULLIF(indikation_medizinisch_voll, '') :: INT AS indikation_medizinisch_voll,
-  NULLIF(indikation_pflegeheim_voll, '') :: INT AS indikation_pflegeheim_voll
+  NULLIF(indikation_pflegeheim_voll, '') :: INT AS indikation_pflegeheim_voll,
+  _source,
+  _insert_TS
 FROM
   COVID_RAW.TBL_germany_vaccinations_timeseries_v2
 
@@ -113,7 +200,8 @@ FROM
 
 -- COMMAND ----------
 
-
+TRUNCATE TABLE covid_qualified.TBL_germany_vaccinations_timeseries_v2;
+INSERT INTO covid_qualified.TBL_germany_vaccinations_timeseries_v2 SELECT * FROM covid_qualified.VW_germany_vaccinations_timeseries_v2;
 
 -- COMMAND ----------
 
@@ -128,7 +216,9 @@ select
   NULLIF(date, '') :: DATE AS date,
   NULLIF(impfstoff, '') AS impfstoff,
   NULLIF(region, '') AS region,
-  NULLIF(dosen, '') :: INT AS dosen
+  NULLIF(dosen, '') :: INT AS dosen,
+  _source,
+  _insert_TS
 from
   COVID_RAW.TBL_germany_deliveries_timeseries_v2
 
@@ -142,7 +232,8 @@ FROM
 
 -- COMMAND ----------
 
-
+TRUNCATE TABLE covid_qualified.TBL_germany_vaccinations_timeseries_v2;
+INSERT INTO covid_qualified.TBL_germany_vaccinations_timeseries_v2 SELECT * FROM covid_qualified.VW_germany_vaccinations_timeseries_v2;
 
 -- COMMAND ----------
 
@@ -157,7 +248,9 @@ SELECT
   NULLIF(code, '') AS code,
   NULLIF(vaccinationsTotal, '') :: INT AS vaccinationsTotal,
   NULLIF(peopleFirstTotal, '') :: INT AS peopleFirstTotal,
-  NULLIF(peopleFullTotal, '') :: INT AS peopleFullTotal
+  NULLIF(peopleFullTotal, '') :: INT AS peopleFullTotal,
+  _source,
+  _insert_TS
 FROM
   COVID_RAW.TBL_germany_vaccinations_by_state_v1
 
@@ -171,7 +264,8 @@ FROM
 
 -- COMMAND ----------
 
-
+TRUNCATE TABLE covid_qualified.TBL_germany_vaccinations_by_state_v1;
+INSERT INTO covid_qualified.TBL_germany_vaccinations_by_state_v1 SELECT * FROM covid_qualified.VW_germany_vaccinations_by_state_v1;
 
 -- COMMAND ----------
 
@@ -194,7 +288,9 @@ SELECT
   NULLIF(properties.AnzTodesfallM, '') :: INT AS AnzTodesfallM,
   NULLIF(properties.AnzTodesfallW, '') :: INT AS AnzTodesfallW,
   NULLIF(properties.BundeslandId, '') AS BundeslandId,
-  NULLIF(properties.ObjectId, '') AS ObjectId
+  NULLIF(properties.ObjectId, '') AS ObjectId,
+  _source,
+  _insert_TS
 FROM
   COVID_RAW.TBL_RKI_Altersgruppen
 WHERE
@@ -210,7 +306,8 @@ FROM
 
 -- COMMAND ----------
 
-
+TRUNCATE TABLE covid_qualified.TBL_RKI_Altersgruppen;
+INSERT INTO covid_qualified.TBL_RKI_Altersgruppen SELECT * FROM covid_qualified.VW_RKI_Altersgruppen;
 
 -- COMMAND ----------
 
@@ -245,7 +342,9 @@ SELECT
   NULLIF(properties.NeuerFall, '') :: INT AS NeuerFall,
   NULLIF(properties.NeuerTodesfall, '') :: INT AS NeuerTodesfall,
   NULLIF(properties.ObjectId, '') AS ObjectId,
-  NULLIF(properties.Refdatum, '') :: TIMESTAMP AS Refdatum
+  NULLIF(properties.Refdatum, '') :: TIMESTAMP AS Refdatum,
+  _source,
+  _insert_TS
 FROM
   COVID_RAW.TBL_RKI_COVID19
 WHERE
@@ -261,7 +360,8 @@ FROM
 
 -- COMMAND ----------
 
-
+TRUNCATE TABLE covid_qualified.TBL_RKI_COVID19;
+INSERT INTO covid_qualified.TBL_RKI_COVID19 SELECT * FROM covid_qualified.VW_RKI_COVID19;
 
 -- COMMAND ----------
 
@@ -329,7 +429,9 @@ SELECT
     ),
     ''
   ) AS last_update,
-  NULLIF(properties.recovered, '') AS recovered
+  NULLIF(properties.recovered, '') AS recovered,
+  _source,
+  _insert_TS
 from
   COVID_RAW.TBL_RKI_Corona_Landkreise
 WHERE
@@ -345,7 +447,8 @@ FROM
 
 -- COMMAND ----------
 
-
+TRUNCATE TABLE covid_qualified.TBL_RKI_Corona_Landkreise;
+INSERT INTO covid_qualified.TBL_RKI_Corona_Landkreise SELECT * FROM covid_qualified.VW_RKI_Corona_Landkreise;
 
 -- COMMAND ----------
 
@@ -382,7 +485,9 @@ SELECT
   NULLIF(properties.cases7_bl_per_100k, '') :: DECIMAL(38, 20) AS cases7_bl_per_100k,
   NULLIF(properties.cases7_bl_per_100k_txt, '') :: DECIMAL(5, 2) AS cases7_bl_per_100k_txt,
   NULLIF(properties.death7_bl, '') :: INT AS death7_bl,
-  NULLIF(properties.faelle_100000_EW, '') :: DECIMAL(38, 20) AS faelle_100000_EW
+  NULLIF(properties.faelle_100000_EW, '') :: DECIMAL(38, 20) AS faelle_100000_EW,
+  _source,
+  _insert_TS
 FROM
   COVID_RAW.TBL_RKI_Corona_Bundeslaender
 WHERE
@@ -398,7 +503,8 @@ FROM
 
 -- COMMAND ----------
 
-
+TRUNCATE TABLE covid_qualified.TBL_RKI_Corona_Bundeslaender;
+INSERT INTO covid_qualified.TBL_RKI_Corona_Bundeslaender SELECT * FROM covid_qualified.VW_RKI_Corona_Bundeslaender;
 
 -- COMMAND ----------
 
@@ -422,7 +528,9 @@ SELECT
   NULLIF(properties.AnzTodesfallNeu, '') :: INT AS AnzTodesfallNeu,
   NULLIF(properties.BundeslandId, '') AS BundeslandId,
   NULLIF(properties.Inz7T, '') :: DECIMAL(10, 3) AS Inz7T,
-  NULLIF(properties.ObjectId, '') AS ObjectId
+  NULLIF(properties.ObjectId, '') AS ObjectId,
+  _source,
+  _insert_TS
 FROM
   COVID_RAW.TBL_RKI_key_data
 WHERE
@@ -438,4 +546,5 @@ FROM
 
 -- COMMAND ----------
 
-
+TRUNCATE TABLE covid_qualified.TBL_RKI_key_data;
+INSERT INTO covid_qualified.TBL_RKI_key_data SELECT * FROM covid_qualified.VW_RKI_key_data;

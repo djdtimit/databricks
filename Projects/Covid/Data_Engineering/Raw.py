@@ -1,4 +1,9 @@
 # Databricks notebook source
+# MAGIC %sql
+# MAGIC set spark.databricks.delta.properties.defaults.enableChangeDataFeed = true;
+
+# COMMAND ----------
+
 import databricks.koalas as ks
 from pyspark.sql.functions import input_file_name, current_timestamp, from_utc_timestamp
 
@@ -92,11 +97,6 @@ for file in file_list:
 # MAGIC CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_csse_covid_19_daily_reports
 # MAGIC USING DELTA
 # MAGIC LOCATION '/mnt/covid/Raw/TBL_csse_covid_19_daily_reports/'
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC SELECT * FROM COVID_RAW.TBL_csse_covid_19_daily_reports
 
 # COMMAND ----------
 
