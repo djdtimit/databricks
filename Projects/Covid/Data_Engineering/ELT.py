@@ -14,11 +14,6 @@ from pyspark.sql.functions import input_file_name, current_timestamp, from_utc_t
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC set spark.databricks.delta.properties.defaults.enableChangeDataFeed = true;
-
-# COMMAND ----------
-
 def get_rki_data(url, tmp_path, save_mnt_path):
   urllib.request.urlretrieve(url, tmp_path.replace('dbfs:/','/dbfs/'))
   dbutils.fs.mv(tmp_path, save_mnt_path, True)
@@ -246,7 +241,8 @@ for file in file_list:
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC OPTIMIZE COVID_RAW.TBL_csse_covid_19_daily_reports
+# MAGIC OPTIMIZE COVID_RAW.TBL_csse_covid_19_daily_reports;
+# MAGIC VACUUM  COVID_RAW.TBL_csse_covid_19_daily_reports;
 
 # COMMAND ----------
 
@@ -380,6 +376,12 @@ for database_object in database_objects:
 # COMMAND ----------
 
 # MAGIC %sql
+# MAGIC OPTIMIZE covid_qualified.TBL_csse_covid_19_daily_reports;
+# MAGIC VACUUM  covid_qualified.TBL_csse_covid_19_daily_reports;
+
+# COMMAND ----------
+
+# MAGIC %sql
 # MAGIC TRUNCATE TABLE covid_qualified.TBL_germany_vaccinations_timeseries_v2;
 # MAGIC INSERT INTO covid_qualified.TBL_germany_vaccinations_timeseries_v2 SELECT * FROM covid_qualified.VW_germany_vaccinations_timeseries_v2;
 
@@ -424,3 +426,12 @@ for database_object in database_objects:
 # MAGIC %sql
 # MAGIC TRUNCATE TABLE covid_qualified.TBL_RKI_key_data;
 # MAGIC INSERT INTO covid_qualified.TBL_RKI_key_data SELECT * FROM covid_qualified.VW_RKI_key_data;
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC # Curated
+
+# COMMAND ----------
+
+
