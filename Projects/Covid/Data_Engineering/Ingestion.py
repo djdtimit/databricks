@@ -11,6 +11,11 @@ import pytz
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC set spark.databricks.delta.properties.defaults.enableChangeDataFeed = true;
+
+# COMMAND ----------
+
 def get_rki_data(url, tmp_path, save_mnt_path):
   urllib.request.urlretrieve(url, tmp_path.replace('dbfs:/','/dbfs/'))
   dbutils.fs.mv(tmp_path, save_mnt_path, True)
