@@ -13,102 +13,147 @@ CREATE DATABASE covid_qualified
 
 -- COMMAND ----------
 
-CREATE
-OR REPLACE VIEW covid_qualified.VW_csse_covid_19_daily_reports AS WITH VALIDATION AS (
-  SELECT
-    NULLIF(FIPS, '') :: INT AS FIPS,
-    NULLIF(NULLIF(Admin2, ''), 'None') AS Admin2,
-    NULLIF(NULLIF(Province_State, ''), 'None') AS Province_State,
-    NULLIF(Country_Region, '') AS Country_Region,
-    CASE
-      WHEN last_update like '%/%'
-      AND LENGTH(last_update) = 15 THEN NULLIF(to_timestamp(last_update, 'M/dd/yyyy HH:mm'), '')
-      WHEN last_update like '%/%'
-      AND LENGTH(last_update) = 14
-      AND SUBSTRING(last_update, 9, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yyyy HH:mm'), '')
-      WHEN last_update like '%/%'
-      AND LENGTH(last_update) = 14
-      AND SUBSTRING(last_update, 10, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yyyy H:mm'), '')
-      WHEN last_update like '%/%'
-      AND LENGTH(last_update) = 13
-      AND SUBSTRING(last_update, 8, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yy HH:mm'), '')
-      WHEN last_update like '%/%'
-      AND LENGTH(last_update) = 13
-      AND SUBSTRING(last_update, 9, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yyyy H:mm'), '')
-      WHEN last_update like '%/%'
-      AND LENGTH(last_update) = 12
-      AND SUBSTRING(last_update, 7, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yy HH:mm'), '')
-      WHEN last_update like '%/%'
-      AND LENGTH(last_update) = 12
-      AND SUBSTRING(last_update, 8, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yy H:mm'), '')
-      WHEN last_update like '%/%'
-      AND LENGTH(last_update) = 11 THEN NULLIF(to_timestamp(last_update, 'M/d/yy H:mm'), '')
-      ELSE NULLIF(to_timestamp(last_update), '')
-    END AS Last_Update,
-    NULLIF(Latitude, '') :: DECIMAL(38, 15) AS Latitude,
-    NULLIF(Longitude, '') :: DECIMAL(38, 15) AS Longitude,
-    NULLIF(Confirmed, '') :: INT AS Confirmed,
-    NULLIF(Deaths, '') :: INT AS Deaths,
-    NULLIF(Recovered, '') :: INT AS Recovered,
-    NULLIF(Active, '') :: INT AS Active,
-    NULLIF(Combined_Key, '') AS Combined_Key,
-    NULLIF(Incidence_Rate, '') :: DECIMAL(38, 15) AS Incidence_Rate,
-    NULLIF(Case_Fatality_Ratio, '') :: DECIMAL(38, 15) AS Case_Fatality_Ratio,
-    _source,
-    _insert_TS
-  FROM
-    COVID_RAW.TBL_csse_covid_19_daily_reports
-),
-DEDUPLICATION AS (
-  SELECT
-    FIPS,
-    Admin2,
-    Province_State,
-    Country_Region,
-    last_update,
-    Latitude,
-    Longitude,
-    Confirmed,
-    Deaths,
-    Recovered,
-    Active,
-    Combined_Key,
-    Incidence_Rate,
-    Case_Fatality_Ratio,
-    _source,
-    _insert_TS,
-    ROW_NUMBER() OVER (
-      PARTITION BY ADMIN2,
-      Province_State,
-      Country_Region,
-      last_update
-      ORDER BY
-        _insert_TS DESC
-    ) AS ROW_NUMBER
-  FROM
-    VALIDATION
-)
-SELECT
-  FIPS,
-  Admin2,
-  Province_State,
-  Country_Region,
-  last_update,
-  Latitude,
-  Longitude,
-  Confirmed,
-  Deaths,
-  Recovered,
-  Active,
-  Combined_Key,
-  Incidence_Rate,
-  Case_Fatality_Ratio,
-  _source,
-  _insert_TS
-FROM
-  DEDUPLICATION
-WHERE
-  ROW_NUMBER = 1
+-- MAGIC %sql CREATE
+-- MAGIC OR REPLACE VIEW covid_qualified.VW_csse_covid_19_daily_reports AS WITH SCHEMA_FIX AS (
+-- MAGIC   SELECT
+-- MAGIC     FIPS,
+-- MAGIC     Admin2,
+-- MAGIC     Province_State,
+-- MAGIC     Country_Region,
+-- MAGIC     Last_Update,
+-- MAGIC     Lat as Latitude,
+-- MAGIC     Long_ as Longitude,
+-- MAGIC     Confirmed,
+-- MAGIC     Deaths,
+-- MAGIC     Recovered,
+-- MAGIC     Active,
+-- MAGIC     Combined_Key,
+-- MAGIC     Incident_Rate as Incidence_Rate,
+-- MAGIC     Case_Fatality_Ratio,
+-- MAGIC     _source,
+-- MAGIC     _insert_TS
+-- MAGIC   FROM
+-- MAGIC     COVID_RAW.TBL_csse_covid_19_daily_reports
+-- MAGIC   WHERE
+-- MAGIC     Province_State not like '%:%'
+-- MAGIC   UNION
+-- MAGIC   SELECT
+-- MAGIC     NULL AS FIPS,
+-- MAGIC     NULL AS Admin2,
+-- MAGIC     FIPS AS Province_State,
+-- MAGIC     Admin2 AS Country_Region,
+-- MAGIC     Province_State AS Last_Update,
+-- MAGIC     Long_ as Latitude,
+-- MAGIC     Confirmed as Longitude,
+-- MAGIC     Country_Region AS Confirmed,
+-- MAGIC     Last_Update AS Deaths,
+-- MAGIC     Lat AS Recovered,
+-- MAGIC     NULL AS Active,
+-- MAGIC     NULL AS Combined_Key,
+-- MAGIC     Incident_Rate as Incidence_Rate,
+-- MAGIC     Case_Fatality_Ratio,
+-- MAGIC     _source,
+-- MAGIC     _insert_TS
+-- MAGIC   FROM
+-- MAGIC     COVID_RAW.TBL_csse_covid_19_daily_reports
+-- MAGIC   WHERE
+-- MAGIC     Province_State like '%:%'
+-- MAGIC ),
+-- MAGIC VALIDATION AS (
+-- MAGIC   SELECT
+-- MAGIC     NULLIF(FIPS, '') :: INT AS FIPS,
+-- MAGIC     NULLIF(NULLIF(Admin2, ''), 'None') AS Admin2,
+-- MAGIC     NULLIF(NULLIF(Province_State, ''), 'None') AS Province_State,
+-- MAGIC     NULLIF(Country_Region, '') AS Country_Region,
+-- MAGIC     CASE
+-- MAGIC       WHEN last_update like '%/%'
+-- MAGIC       AND LENGTH(last_update) = 15 THEN NULLIF(to_timestamp(last_update, 'M/dd/yyyy HH:mm'), '')
+-- MAGIC       WHEN last_update like '%/%'
+-- MAGIC       AND LENGTH(last_update) = 14
+-- MAGIC       AND SUBSTRING(last_update, 9, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yyyy HH:mm'), '')
+-- MAGIC       WHEN last_update like '%/%'
+-- MAGIC       AND LENGTH(last_update) = 14
+-- MAGIC       AND SUBSTRING(last_update, 10, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yyyy H:mm'), '')
+-- MAGIC       WHEN last_update like '%/%'
+-- MAGIC       AND LENGTH(last_update) = 13
+-- MAGIC       AND SUBSTRING(last_update, 8, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yy HH:mm'), '')
+-- MAGIC       WHEN last_update like '%/%'
+-- MAGIC       AND LENGTH(last_update) = 13
+-- MAGIC       AND SUBSTRING(last_update, 9, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yyyy H:mm'), '')
+-- MAGIC       WHEN last_update like '%/%'
+-- MAGIC       AND LENGTH(last_update) = 12
+-- MAGIC       AND SUBSTRING(last_update, 7, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/d/yy HH:mm'), '')
+-- MAGIC       WHEN last_update like '%/%'
+-- MAGIC       AND LENGTH(last_update) = 12
+-- MAGIC       AND SUBSTRING(last_update, 8, 1) = ' ' THEN NULLIF(to_timestamp(last_update, 'M/dd/yy H:mm'), '')
+-- MAGIC       WHEN last_update like '%/%'
+-- MAGIC       AND LENGTH(last_update) = 11 THEN NULLIF(to_timestamp(last_update, 'M/d/yy H:mm'), '')
+-- MAGIC       ELSE NULLIF(to_timestamp(last_update), '')
+-- MAGIC     END AS Last_Update,
+-- MAGIC     NULLIF(Latitude, '') :: DECIMAL(38, 15) AS Latitude,
+-- MAGIC     NULLIF(Longitude, '') :: DECIMAL(38, 15) AS Longitude,
+-- MAGIC     NULLIF(Confirmed, '') :: INT AS Confirmed,
+-- MAGIC     NULLIF(Deaths, '') :: INT AS Deaths,
+-- MAGIC     NULLIF(Recovered, '') :: INT AS Recovered,
+-- MAGIC     NULLIF(Active, '') :: INT AS Active,
+-- MAGIC     NULLIF(Combined_Key, '') AS Combined_Key,
+-- MAGIC     NULLIF(Incidence_Rate, '') :: DECIMAL(38, 15) AS Incidence_Rate,
+-- MAGIC     NULLIF(Case_Fatality_Ratio, '') :: DECIMAL(38, 15) AS Case_Fatality_Ratio,
+-- MAGIC     _source,
+-- MAGIC     _insert_TS
+-- MAGIC   FROM
+-- MAGIC     SCHEMA_FIX
+-- MAGIC ),
+-- MAGIC DEDUPLICATION AS (
+-- MAGIC   SELECT
+-- MAGIC     FIPS,
+-- MAGIC     Admin2,
+-- MAGIC     Province_State,
+-- MAGIC     Country_Region,
+-- MAGIC     last_update,
+-- MAGIC     Latitude,
+-- MAGIC     Longitude,
+-- MAGIC     Confirmed,
+-- MAGIC     Deaths,
+-- MAGIC     Recovered,
+-- MAGIC     Active,
+-- MAGIC     Combined_Key,
+-- MAGIC     Incidence_Rate,
+-- MAGIC     Case_Fatality_Ratio,
+-- MAGIC     _source,
+-- MAGIC     _insert_TS,
+-- MAGIC     ROW_NUMBER() OVER (
+-- MAGIC       PARTITION BY ADMIN2,
+-- MAGIC       Province_State,
+-- MAGIC       Country_Region,
+-- MAGIC       last_update
+-- MAGIC       ORDER BY
+-- MAGIC         _insert_TS DESC
+-- MAGIC     ) AS ROW_NUMBER
+-- MAGIC   FROM
+-- MAGIC     VALIDATION
+-- MAGIC )
+-- MAGIC SELECT
+-- MAGIC   FIPS,
+-- MAGIC   Admin2,
+-- MAGIC   Province_State,
+-- MAGIC   Country_Region,
+-- MAGIC   last_update,
+-- MAGIC   Latitude,
+-- MAGIC   Longitude,
+-- MAGIC   Confirmed,
+-- MAGIC   Deaths,
+-- MAGIC   Recovered,
+-- MAGIC   Active,
+-- MAGIC   Combined_Key,
+-- MAGIC   Incidence_Rate,
+-- MAGIC   Case_Fatality_Ratio,
+-- MAGIC   _source,
+-- MAGIC   _insert_TS
+-- MAGIC FROM
+-- MAGIC   DEDUPLICATION
+-- MAGIC WHERE
+-- MAGIC   ROW_NUMBER = 1
 
 -- COMMAND ----------
 
@@ -118,38 +163,6 @@ SELECT
 FROM
   covid_qualified.VW_csse_covid_19_daily_reports
 
-
--- COMMAND ----------
-
-MERGE INTO covid_qualified.TBL_csse_covid_19_daily_reports AS T USING covid_qualified.VW_csse_covid_19_daily_reports AS S 
-ON (
-  T.ADMIN2 = S.ADMIN2
-  OR (
-    T.ADMIN2 IS NULL
-    AND S.ADMIN2 IS NULL
-  )
-)
-AND (
-  T.Province_State = S.Province_State
-  OR (
-    T.Province_State IS NULL
-    AND S.Province_State IS NULL
-  )
-)
-AND T.Country_Region = S.Country_Region
-AND T.last_update = S.last_update
-WHEN MATCHED
-AND datediff(CURRENT_TIMESTAMP, S._INSERT_TS) <= 14 THEN
-UPDATE
-SET
-  *
-  WHEN NOT MATCHED THEN
-INSERT
-  *
-
--- COMMAND ----------
-
-OPTIMIZE covid_qualified.TBL_csse_covid_19_daily_reports
 
 -- COMMAND ----------
 
@@ -200,11 +213,6 @@ FROM
 
 -- COMMAND ----------
 
-TRUNCATE TABLE covid_qualified.TBL_germany_vaccinations_timeseries_v2;
-INSERT INTO covid_qualified.TBL_germany_vaccinations_timeseries_v2 SELECT * FROM covid_qualified.VW_germany_vaccinations_timeseries_v2;
-
--- COMMAND ----------
-
 -- MAGIC %md
 -- MAGIC **germany_deliveries_timeseries_v2**
 
@@ -232,11 +240,6 @@ FROM
 
 -- COMMAND ----------
 
-TRUNCATE TABLE covid_qualified.TBL_germany_vaccinations_timeseries_v2;
-INSERT INTO covid_qualified.TBL_germany_vaccinations_timeseries_v2 SELECT * FROM covid_qualified.VW_germany_vaccinations_timeseries_v2;
-
--- COMMAND ----------
-
 -- MAGIC %md
 -- MAGIC **germany_vaccinations_by_state_v1**
 
@@ -261,11 +264,6 @@ SELECT
   *
 FROM
   covid_qualified.vw_germany_vaccinations_by_state_v1
-
--- COMMAND ----------
-
-TRUNCATE TABLE covid_qualified.TBL_germany_vaccinations_by_state_v1;
-INSERT INTO covid_qualified.TBL_germany_vaccinations_by_state_v1 SELECT * FROM covid_qualified.VW_germany_vaccinations_by_state_v1;
 
 -- COMMAND ----------
 
@@ -303,11 +301,6 @@ SELECT
   *
 FROM
   covid_qualified.vw_RKI_Altersgruppen
-
--- COMMAND ----------
-
-TRUNCATE TABLE covid_qualified.TBL_RKI_Altersgruppen;
-INSERT INTO covid_qualified.TBL_RKI_Altersgruppen SELECT * FROM covid_qualified.VW_RKI_Altersgruppen;
 
 -- COMMAND ----------
 
@@ -357,11 +350,6 @@ SELECT
   *
 FROM
   covid_qualified.vw_RKI_COVID19
-
--- COMMAND ----------
-
-TRUNCATE TABLE covid_qualified.TBL_RKI_COVID19;
-INSERT INTO covid_qualified.TBL_RKI_COVID19 SELECT * FROM covid_qualified.VW_RKI_COVID19;
 
 -- COMMAND ----------
 
@@ -447,11 +435,6 @@ FROM
 
 -- COMMAND ----------
 
-TRUNCATE TABLE covid_qualified.TBL_RKI_Corona_Landkreise;
-INSERT INTO covid_qualified.TBL_RKI_Corona_Landkreise SELECT * FROM covid_qualified.VW_RKI_Corona_Landkreise;
-
--- COMMAND ----------
-
 -- MAGIC %md
 -- MAGIC **RKI_Corona_Bundeslaender**
 
@@ -503,11 +486,6 @@ FROM
 
 -- COMMAND ----------
 
-TRUNCATE TABLE covid_qualified.TBL_RKI_Corona_Bundeslaender;
-INSERT INTO covid_qualified.TBL_RKI_Corona_Bundeslaender SELECT * FROM covid_qualified.VW_RKI_Corona_Bundeslaender;
-
--- COMMAND ----------
-
 -- MAGIC %md
 -- MAGIC **RKI_key_data**
 
@@ -543,8 +521,3 @@ SELECT
   *
 FROM
   covid_qualified.vw_RKI_key_data
-
--- COMMAND ----------
-
-TRUNCATE TABLE covid_qualified.TBL_RKI_key_data;
-INSERT INTO covid_qualified.TBL_RKI_key_data SELECT * FROM covid_qualified.VW_RKI_key_data;
