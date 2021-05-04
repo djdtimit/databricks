@@ -10,7 +10,7 @@ import datetime
 import pytz
 import regex as re
 import databricks.koalas as ks
-from pyspark.sql.functions import input_file_name, current_timestamp, from_utc_timestamp
+from pyspark.sql.functions import input_file_name, current_timestamp, from_utc_timestamp, col
 
 # COMMAND ----------
 
@@ -50,19 +50,6 @@ def write_json_into_raw(ingestion_load_path, raw_save_path):
   df['_source'] = input_file_name()
   df['_insert_TS'] = from_utc_timestamp(current_timestamp(), 'Europe/Berlin')
   df.to_delta(raw_save_path,mode='overwrite', index=False)
-
-# COMMAND ----------
-
-def rename_columns(s) -> str:
-  new_column = s.replace(' ','_').replace('/','_').replace('-','_')
-  
-  if 'Long' in s:
-    new_column = 'Longitude'
-  if 'Lat' in s:
-    new_column = 'Latitude'
-  if 'Incid' in s:
-    new_column = 'Incidence_Rate'
-  return new_column
 
 # COMMAND ----------
 
@@ -151,6 +138,9 @@ df_load_history = spark.sql('SELECT count(*) as c, MAX(last_load_ts) as last_loa
 
 load_history_count = df_load_history[0].c
 
+loaded_csv_files = []
+last_commit_messages = []
+
 
 if load_history_count == 0:
   last_load_ts = datetime.datetime(2019, 4, 25)
@@ -178,12 +168,21 @@ for csv_file in csv_files:
     
     df_csv_file.to_csv(os.path.join(tmp_path_csse_covid_19_daily_reports.replace('dbfs:/','/dbfs/'), csv_file), index=False)
     dbutils.fs.mv(os.path.join(tmp_path_csse_covid_19_daily_reports, csv_file), target_path, True)
+    
+    loaded_csv_files.append(csv_file)
+    last_commit_messages.append(last_commit_message)
 
     print('target_path: ', target_path)
-    
-    spark.sql(f"""INSERT INTO COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_history VALUES ('{csv_file}','{last_commit_message}',from_utc_timestamp('{current_ts}', 'Europe/Berlin'))""")
 
-  
+# gather the load information in one dataframe at the end
+df = pd.DataFrame(list(zip(loaded_csv_files, last_commit_messages)),
+               columns =['file_name', 'last_commit_message'])
+df['last_load_ts'] = current_ts.strftime("%Y-%m-%d %H:%M:%S")
+df_history_insert = spark.createDataFrame(df)
+df_history_insert.createOrReplaceTempView('history_insert')
+# ... and insert into load history table to decrease insert time of every single loaded file into this table
+spark.sql("INSERT INTO COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_history SELECT file_name, last_commit_message,from_utc_timestamp(last_load_ts) FROM history_insert")  
+
 print('Number of loaded files: ', counter)
 
 spark.sql("""Optimize COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_history""")
@@ -195,48 +194,14 @@ spark.sql("""Optimize COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_histo
 
 # COMMAND ----------
 
-mount_point = '/mnt/covid/Ingestion/csse_covid_19_daily_reports/'
+df_csse_covid_19_daily_reports = (spark.read.option('header',True).option('sep',',').csv('dbfs:/mnt/covid/Ingestion/csse_covid_19_daily_reports/').withColumn('_source', input_file_name()).withColumn('_insert_TS', from_utc_timestamp(current_timestamp(), 'Europe/Berlin')))
 
-file_list = [file.name for file in dbutils.fs.ls("dbfs:{}".format(mount_point))]
+# COMMAND ----------
 
-for file in file_list:
-  loadFile = "{0}/{1}".format(mount_point, file)
-  df_csse_covid_19_daily_reports = ks.read_csv(loadFile,dtype=str)
-  
-  df_csse_covid_19_daily_reports['_source'] = input_file_name()
-  
-  df_renamed = df_csse_covid_19_daily_reports.rename(rename_columns, axis='columns')
-  
-  if 'Active' not in df_renamed.columns:
-    df_renamed['Active'] = ''
-   
-  if 'Latitude' not in df_renamed.columns:
-    df_renamed['Latitude'] = ''
-
-  if 'Longitude' not in df_renamed.columns:
-    df_renamed['Longitude'] = ''
-
-  if 'FIPS' not in df_renamed.columns:
-    df_renamed['FIPS'] = ''
-
-  if 'Admin2' not in df_renamed.columns:
-    df_renamed['Admin2'] = ''
-
-  if 'Combined_Key' not in df_renamed.columns:
-    df_renamed['Combined_Key'] = ''
-
-  if 'Incidence_Rate' not in df_renamed.columns:
-    df_renamed['Incidence_Rate'] = ''
-
-  if 'Case_Fatality_Ratio' not in df_renamed.columns:
-    df_renamed['Case_Fatality_Ratio'] = ''
-    
-  df_final = df_renamed[["FIPS","Admin2","Province_State","Country_Region","Last_Update","Latitude","Longitude","Confirmed","Deaths","Recovered","Active","Combined_Key","Incidence_Rate","Case_Fatality_Ratio","_source"]]
-  
-  df_final['_insert_TS'] = from_utc_timestamp(current_timestamp(), 'Europe/Berlin')
-
-  
-  df_final.to_delta(path= '/mnt/covid/Raw/TBL_csse_covid_19_daily_reports/',mode='append', index=False)
+df_csse_covid_19_daily_reports.write.format("delta") \
+           .option("mergeSchema", "true") \
+           .mode("append") \
+           .save('dbfs:/mnt/covid/Raw/TBL_csse_covid_19_daily_reports/')
 
 # COMMAND ----------
 
@@ -321,7 +286,16 @@ write_json_into_raw(mnt_point_RKI_history_Ingestion, mnt_point_RRKI_history_Raw)
 
 # COMMAND ----------
 
-database_objects = spark.sql("show tables in covid_raw").select('database', 'tableName').collect()
+# MAGIC %sql
+# MAGIC show tables in covid_raw
+
+# COMMAND ----------
+
+database_objects
+
+# COMMAND ----------
+
+database_objects = spark.sql("show tables in covid_raw").select('database', 'tableName').where(col('isTemporary') == 'false').collect()
 for database_object in database_objects:
   database_name = database_object['database']
   table_name = database_object['tableName']
