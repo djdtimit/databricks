@@ -286,15 +286,6 @@ write_json_into_raw(mnt_point_RKI_history_Ingestion, mnt_point_RRKI_history_Raw)
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC show tables in covid_raw
-
-# COMMAND ----------
-
-database_objects
-
-# COMMAND ----------
-
 database_objects = spark.sql("show tables in covid_raw").select('database', 'tableName').where(col('isTemporary') == 'false').collect()
 for database_object in database_objects:
   database_name = database_object['database']

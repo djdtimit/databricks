@@ -31,6 +31,10 @@ CREATE DATABASE if not exists COVID_CURATED
 
 -- COMMAND ----------
 
+
+
+-- COMMAND ----------
+
 SELECT date(last_update), Country_Region, sum(CONFIRMED) AS Total_Confirmed, sum(Deaths) AS Total_Deaths, sum(Recovered) AS Total_Recovered, sum(Active) AS Total_Active FROM covid_qualified.TBL_csse_covid_19_daily_reports 
 WHERE Country_Region = 'Germany'
 group by date(last_update), Country_Region
