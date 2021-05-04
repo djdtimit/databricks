@@ -31,7 +31,209 @@ CREATE DATABASE if not exists COVID_CURATED
 
 -- COMMAND ----------
 
+CREATE OR REPLACE VIEW COVID_CURATED.VW_CSSE
 
+-- COMMAND ----------
+
+With Group_by_date AS (
+  SELECT
+    Country_Region,
+    date(last_update) as date,
+    sum(Active) AS Active_Cases,
+    sum(Recovered) AS Recoveries,
+    sum(Deaths) AS Deaths,
+    sum(Confirmed) AS Confirmed
+  FROM
+    covid_qualified.TBL_csse_covid_19_daily_reports
+  WHERE
+    COUNTRY_REGION = 'Germany'
+  group by
+    Country_Region,
+    date(last_update)
+  order by
+    Country_Region,
+    date(last_update)
+),
+calculate_lag as (
+  SELECT
+    Country_Region,
+    date,
+    Active_Cases,
+    Recoveries,
+    Deaths,
+    Confirmed,
+    lag(Active_Cases, 1) OVER (
+      PARTITION BY Country_Region
+      ORDER BY
+        date
+    ) AS LAG,
+    lag(Confirmed, 1) OVER (
+      PARTITION BY Country_Region
+      ORDER BY
+        date
+    ) AS Confirmed_lag
+  FROM
+    GRoup_by_date
+),
+calculate_percentage_growth as (
+  SELECT
+    Country_Region,
+    date,
+    Active_Cases,
+    Recoveries,
+    Deaths,
+    Confirmed,
+    LAG,
+    (Active_Cases - LAG) / LAG * 100 AS Percentage_Growth_Active_Cases,
+    Confirmed_lag
+  FROM
+    calculate_lag
+)
+SELECT
+  Country_Region,
+  date,
+  Active_Cases,
+  Recoveries,
+  Deaths,
+  Confirmed,
+  LAG,
+  Percentage_Growth_Active_Cases,
+  avg(Percentage_Growth_Active_Cases) OVER (
+    Order By
+      Date Rows BETWEEN 7 Preceding
+      AND Current Row
+  ) as smoothed_Percentage_Growth_Active_Cases,
+  Confirmed - Confirmed_lag AS Confirmed_growth,
+  avg(Confirmed - Confirmed_lag) OVER (
+    Order By
+      Date Rows BETWEEN 7 Preceding
+      AND Current Row
+  ) as smoothed_Confirmed_growth
+FROM
+  calculate_percentage_growth
+
+-- COMMAND ----------
+
+With Group_by_date AS (
+  SELECT
+    Country_Region,
+    date(last_update) as date,
+    sum(Active) AS Active_Cases,
+    sum(Recovered) AS Recoveries,
+    sum(Deaths) AS Deaths,
+    sum(Confirmed) AS Confirmed
+  FROM
+    covid_qualified.TBL_csse_covid_19_daily_reports
+  WHERE
+    COUNTRY_REGION = 'Germany'
+  group by
+    Country_Region,
+    date(last_update)
+  order by
+    Country_Region,
+    date(last_update)
+),
+calculate_lag as (
+  SELECT
+    Country_Region,
+    date,
+    Active_Cases,
+    Recoveries,
+    Deaths,
+    Confirmed,
+    lag(Active_Cases, 1) OVER (
+      PARTITION BY Country_Region
+      ORDER BY
+        date
+    ) AS LAG,
+    lag(Confirmed, 1) OVER (
+      PARTITION BY Country_Region
+      ORDER BY
+        date
+    ) AS Confirmed_growth
+  FROM
+    GRoup_by_date
+),
+calculate_percentage_growth as (
+  SELECT
+    Country_Region,
+    date,
+    Active_Cases,
+    Recoveries,
+    Deaths,
+    Confirmed,
+    LAG,
+    (Active_Cases - LAG) / LAG * 100 AS Percentage_Growth_Active_Cases,
+    Confirmed_growth
+  FROM
+    calculate_lag
+)
+SELECT
+  Country_Region,
+  date,
+  Active_Cases,
+  Recoveries,
+  Deaths,
+  Confirmed,
+  LAG,
+  Percentage_Growth_Active_Cases,
+  IFNULL(log(Percentage_Growth_Active_Cases),0),
+  avg(Percentage_Growth_Active_Cases) OVER (
+    Order By
+      Date Rows BETWEEN 7 Preceding
+      AND Current Row
+  ) as smoothed_Percentage_Growth_Active_Cases,
+  Confirmed_growth
+FROM
+  calculate_percentage_growth
+
+-- COMMAND ----------
+
+With Group_by_date AS (
+  SELECT
+    Country_Region,
+    date(last_update) as date,
+    sum(Active) AS Active_Cases,
+    sum(Recovered) AS Recoveries,
+    sum(Deaths) AS Deaths,
+    sum(Confirmed) AS Confirmed
+  FROM
+    covid_qualified.TBL_csse_covid_19_daily_reports
+  WHERE
+    COUNTRY_REGION = 'Germany'
+  group by
+    Country_Region,
+    date(last_update)
+  order by
+    Country_Region,
+    date(last_update)
+),
+calculate_lag as (
+  SELECT
+    Country_Region,
+    date,
+    Active_Cases,
+    Recoveries,
+    Deaths,
+    Confirmed,
+    lag(Active_Cases, 1) OVER (
+      PARTITION BY Country_Region
+      ORDER BY
+        date
+    ) AS LAG
+  FROM
+    GRoup_by_date
+)
+SELECT
+  Country_Region,
+  date,
+  Active_Cases,
+  Recoveries,
+  Deaths,
+  Confirmed,
+  (Active_Cases - LAG) / LAG * 100 AS Percentage_Growth_Active_Cases
+FROM
+  calculate_lag
 
 -- COMMAND ----------
 
