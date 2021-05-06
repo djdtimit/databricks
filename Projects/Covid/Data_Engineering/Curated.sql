@@ -339,3 +339,37 @@ SELECT * FROM covid_qualified.TBL_RKI_COVID19
 -- MAGIC -9: Fall ist weder in der aktuellen Publikation noch in der des Vortages Genesen 
 -- MAGIC damit ergibt sich: Anzahl Genesen der aktuellen Publikation als Summe(AnzahlGenesen) wenn NeuGenesen in (0,1); Delta zum Vortag als Summe(AnzahlGenesen) wenn NeuGenesen in (-1,1)
 -- MAGIC - IstErkrankungsbeginn: 1, wenn das Refdatum der Erkrankungsbeginn ist, 0 sonst
+
+-- COMMAND ----------
+
+SELECT * FROM covid_qualified.tbl_germany_deliveries_timeseries_v2
+WHERE impfstoff = 'comirnaty'
+order by date, impfstoff
+
+-- COMMAND ----------
+
+SELECT * FROM covid_qualified.tbl_germany_deliveries_timeseries_v2
+WHERE region = 'DE-SH'
+order by date, impfstoff
+
+-- COMMAND ----------
+
+SELECT * FROM covid_qualified.tbl_germany_deliveries_timeseries_v2
+
+-- COMMAND ----------
+
+SELECT * FROM covid_qualified.tbl_germany_vaccinations_by_state_v1
+
+-- COMMAND ----------
+
+SELECT * FROM covid_qualified.tbl_germany_vaccinations_timeseries_v2
+order by date
+
+-- COMMAND ----------
+
+SELECT date, impf_quote_erst * 100 AS impf_quote_erst_in_Percent, impf_quote_voll * 100 AS impf_quote_voll_in_Percent FROM covid_qualified.tbl_germany_vaccinations_timeseries_v2
+order by date
+
+-- COMMAND ----------
+
+
