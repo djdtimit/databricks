@@ -177,10 +177,13 @@ for csv_file in csv_files:
 df = pd.DataFrame(list(zip(loaded_csv_files, last_commit_messages)),
                columns =['file_name', 'last_commit_message'])
 df['last_load_ts'] = current_ts.strftime("%Y-%m-%d %H:%M:%S")
-df_history_insert = spark.createDataFrame(df)
-df_history_insert.createOrReplaceTempView('history_insert')
-# ... and insert into load history table to decrease insert time of every single loaded file into this table
-spark.sql("INSERT INTO COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_history SELECT file_name, last_commit_message,from_utc_timestamp(last_load_ts, 'Europe/Berlin') FROM history_insert")  
+
+# do not write to table if no files are loaded
+if df.shape[0] > 0:
+  df_history_insert = spark.createDataFrame(df)
+  df_history_insert.createOrReplaceTempView('history_insert')
+  # ... and insert into load history table to decrease insert time of every single loaded file into this table
+  spark.sql("INSERT INTO COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_history SELECT file_name, last_commit_message,from_utc_timestamp(last_load_ts, 'Europe/Berlin') FROM history_insert")  
 
 print('Number of loaded files: ', counter)
 

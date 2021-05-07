@@ -199,8 +199,8 @@ With Group_by_date AS (
     sum(Confirmed) AS Confirmed
   FROM
     covid_qualified.TBL_csse_covid_19_daily_reports
-  WHERE
-    COUNTRY_REGION = 'Germany'
+--   WHERE
+--     COUNTRY_REGION = 'Germany'
   group by
     Country_Region,
     date(last_update)
