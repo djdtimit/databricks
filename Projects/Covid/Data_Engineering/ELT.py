@@ -14,6 +14,21 @@ from pyspark.sql.functions import input_file_name, current_timestamp, from_utc_t
 
 # COMMAND ----------
 
+connectionString = dbutils.secrets.get(scope = "RS-TSE-KV", key = 'tselabConnectionString')
+resourceGroup = dbutils.secrets.get(scope = "RS-TSE-KV", key = 'ressourceGroup')
+subscriptionId = dbutils.secrets.get(scope = "RS-TSE-KV", key = 'subscriptionId')
+tenantId = dbutils.secrets.get(scope = "RS-TSE-KV", key = 'tenantId')
+clientId = dbutils.secrets.get(scope = "RS-TSE-KV", key = 'clientId')
+clientSecret = dbutils.secrets.get(scope = "RS-TSE-KV", key = 'clientSecret')
+
+# COMMAND ----------
+
+container_name = 'covid'
+storage_account_name = 'tselab'
+mount_name = 'covid/'
+
+# COMMAND ----------
+
 def get_rki_data(url, tmp_path, save_mnt_path):
   urllib.request.urlretrieve(url, tmp_path.replace('dbfs:/','/dbfs/'))
   dbutils.fs.mv(tmp_path, save_mnt_path, True)
@@ -181,7 +196,7 @@ df['last_load_ts'] = current_ts.strftime("%Y-%m-%d %H:%M:%S")
 df_history_insert = spark.createDataFrame(df)
 df_history_insert.createOrReplaceTempView('history_insert')
 # ... and insert into load history table to decrease insert time of every single loaded file into this table
-spark.sql("INSERT INTO COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_history SELECT file_name, last_commit_message,from_utc_timestamp(last_load_ts) FROM history_insert")  
+spark.sql("INSERT INTO COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_history SELECT file_name, last_commit_message,from_utc_timestamp(last_load_ts, 'Europe/Berlin') FROM history_insert")  
 
 print('Number of loaded files: ', counter)
 
@@ -191,6 +206,37 @@ spark.sql("""Optimize COVID_INGESTION.TBL_csse_covid_19_daily_reports_load_histo
 
 # MAGIC %md
 # MAGIC # Raw
+
+# COMMAND ----------
+
+df = (spark.readStream.format("cloudFiles")
+      .option("cloudFiles.useNotifications", "true")
+      .option("cloudFiles.allowOverwrites", "true")
+      .option("cloudFiles.connectionString", connectionString)
+      .option("cloudFiles.resourceGroup", resourceGroup)
+      .option("cloudFiles.subscriptionId", subscriptionId)
+      .option("cloudFiles.tenantId", tenantId)
+      .option("cloudFiles.clientId", clientId)
+      .option("cloudFiles.clientSecret", clientSecret)
+      .option("cloudFiles.schemaLocation", '/mnt/covid/Ingestion/csse_covid_19_daily_reports/')
+      .option("cloudFiles.format", "text")
+      .load('/mnt/covid/Ingestion/csse_covid_19_daily_reports/')
+     .withColumn('_source', input_file_name()).withColumn('_insert_TS', from_utc_timestamp(current_timestamp(), 'Europe/Berlin')))
+
+
+# COMMAND ----------
+
+(df.writeStream.format("delta") 
+ .option("mergeSchema", "true")
+  .option("checkpointLocation", '/mnt/covid/Raw/TBL_RKI_COVID19_AL/checkpoint/' )
+  .option("cloudFiles.useNotifications", True)
+  .trigger(once=True)
+  .start('/mnt/covid/Raw/TBL_RKI_COVID19_AL/'))
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM delta.`/mnt/covid/Raw/TBL_RKI_COVID19_AL/`
 
 # COMMAND ----------
 
@@ -236,6 +282,16 @@ mnt_point_RKI_Altersgruppen_Ingestion = '/mnt/covid/Ingestion/RKI_Altersgruppen/
 mnt_point_RKI_Altersgruppen_Raw = '/mnt/covid/Raw/TBL_RKI_Altersgruppen/'
 
 write_json_into_raw(mnt_point_RKI_Altersgruppen_Ingestion, mnt_point_RKI_Altersgruppen_Raw)
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM covid_raw.tbl_rki_covid19
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM covid_raw.tbl_rki_covid19
 
 # COMMAND ----------
 
