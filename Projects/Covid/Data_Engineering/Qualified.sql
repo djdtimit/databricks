@@ -521,3 +521,25 @@ SELECT
   *
 FROM
   covid_qualified.vw_RKI_key_data
+
+-- COMMAND ----------
+
+CREATE
+OR REPLACE VIEW covid_qualified.VW_country_iso_data AS
+SELECT
+  NULLIF(alpha2, '') AS alpha2,
+  NULLIF(alpha3, '') AS alpha3,
+  NULLIF(id, '') :: INT AS id,
+  NULLIF(name, '') AS name,
+  _source,
+  _insert_TS
+FROM
+  covid_raw.TBL_country_iso_data
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_country_iso_data USING DELTA LOCATION '/mnt/covid/Qualified/TBL_country_iso_data/' AS
+SELECT
+  *
+FROM
+  covid_qualified.vw_country_iso_data
