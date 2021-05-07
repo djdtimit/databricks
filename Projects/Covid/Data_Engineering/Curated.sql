@@ -244,6 +244,17 @@ order by date(last_update), Country_Region
 
 -- COMMAND ----------
 
+SELECT distinct country_region FROM covid_qualified.TBL_csse_covid_19_daily_reports cdr
+LEFT JOIN covid_qualified.TBL_country_iso_data cid
+On cdr.Country_region = cid.name
+where name is null
+
+-- COMMAND ----------
+
+SELECT * FROM covid_qualified.TBL_country_iso_data
+
+-- COMMAND ----------
+
 SELECT
   last_update,
   country_region,

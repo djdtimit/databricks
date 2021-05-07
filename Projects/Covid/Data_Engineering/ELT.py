@@ -19,7 +19,7 @@ def get_rki_data(url, tmp_path, save_mnt_path):
 
 # COMMAND ----------
 
-def get_vaccinations_data(url, tmp_path, save_mnt_path):
+def download_csv_data_into_datalake(url, tmp_path, save_mnt_path):
   df = pd.read_csv(url,sep='\t',header=0,dtype=str)
   df.to_csv(tmp_path.replace('dbfs:/','/dbfs/'), index=False)
   dbutils.fs.mv(tmp_path, save_mnt_path, True)
@@ -115,9 +115,9 @@ save_path_germany_vaccinations_by_state_v1 = 'dbfs:/mnt/covid/Ingestion/germany_
 
 # COMMAND ----------
 
-get_vaccinations_data(url_germany_vaccinations_timeseries_v2, tmp_path_germany_vaccinations_timeseries_v2, save_path_germany_vaccinations_timeseries_v2)
-get_vaccinations_data(url_germany_deliveries_timeseries_v2, tmp_path_germany_deliveries_timeseries_v2, save_path_germany_deliveries_timeseries_v2)
-get_vaccinations_data(url_germany_vaccinations_by_state_v1, tmp_path_germany_vaccinations_by_state_v1, save_path_germany_vaccinations_by_state_v1)
+download_csv_data_into_datalake(url_germany_vaccinations_timeseries_v2, tmp_path_germany_vaccinations_timeseries_v2, save_path_germany_vaccinations_timeseries_v2)
+download_csv_data_into_datalake(url_germany_deliveries_timeseries_v2, tmp_path_germany_deliveries_timeseries_v2, save_path_germany_deliveries_timeseries_v2)
+download_csv_data_into_datalake(url_germany_vaccinations_by_state_v1, tmp_path_germany_vaccinations_by_state_v1, save_path_germany_vaccinations_by_state_v1)
 
 # COMMAND ----------
 
@@ -279,6 +279,13 @@ write_json_into_raw(mnt_point_RKI_key_data_Ingestion, mnt_point_RKI_key_data_Raw
 
 mnt_point_RKI_history_Ingestion = '/mnt/covid/Ingestion/RKI_history/'
 mnt_point_RRKI_history_Raw = '/mnt/covid/Raw/TBL_RKI_history/'
+
+write_json_into_raw(mnt_point_RKI_history_Ingestion, mnt_point_RRKI_history_Raw)
+
+# COMMAND ----------
+
+mnt_point_RKI_history_Ingestion = '/mnt/covid/Ingestion/country_iso_data/'
+mnt_point_RRKI_history_Raw = '/mnt/covid/Raw/TBL_country_iso_data/'
 
 write_json_into_raw(mnt_point_RKI_history_Ingestion, mnt_point_RRKI_history_Raw)
 
