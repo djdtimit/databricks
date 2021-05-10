@@ -284,10 +284,10 @@ write_json_into_raw(mnt_point_RKI_history_Ingestion, mnt_point_RRKI_history_Raw)
 
 # COMMAND ----------
 
-mnt_point_RKI_history_Ingestion = '/mnt/covid/Ingestion/country_iso_data/'
-mnt_point_RRKI_history_Raw = '/mnt/covid/Raw/TBL_country_iso_data/'
+# mnt_point_RKI_history_Ingestion = '/mnt/covid/Ingestion/country_iso_data/'
+# mnt_point_RRKI_history_Raw = '/mnt/covid/Raw/TBL_country_iso_data/'
 
-write_json_into_raw(mnt_point_RKI_history_Ingestion, mnt_point_RRKI_history_Raw)
+# write_json_into_raw(mnt_point_RKI_history_Ingestion, mnt_point_RRKI_history_Raw)
 
 # COMMAND ----------
 
@@ -409,4 +409,33 @@ for database_object in database_objects:
 
 # COMMAND ----------
 
+# MAGIC %sql MERGE INTO covid_curated.TBL_csse_covid_19_daily_reports_iso_names T USING covid_curated.VW_csse_covid_19_daily_reports_iso_names S ON (
+# MAGIC   T.ADMIN2 = S.ADMIN2
+# MAGIC   OR (
+# MAGIC     T.ADMIN2 IS NULL
+# MAGIC     AND S.ADMIN2 IS NULL
+# MAGIC   )
+# MAGIC )
+# MAGIC AND (
+# MAGIC   T.Province_State = S.Province_State
+# MAGIC   OR (
+# MAGIC     T.Province_State IS NULL
+# MAGIC     AND S.Province_State IS NULL
+# MAGIC   )
+# MAGIC )
+# MAGIC AND T.Country_Region = S.Country_Region
+# MAGIC AND T.last_update = S.last_update
+# MAGIC WHEN MATCHED
+# MAGIC AND datediff(CURRENT_TIMESTAMP, S._INSERT_TS) <= 14 THEN
+# MAGIC UPDATE
+# MAGIC SET
+# MAGIC   *
+# MAGIC   WHEN NOT MATCHED THEN
+# MAGIC INSERT
+# MAGIC   *
 
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC OPTIMIZE covid_curated.TBL_csse_covid_19_daily_reports_iso_names;
+# MAGIC VACUUM  covid_curated.TBL_csse_covid_19_daily_reports_iso_names;

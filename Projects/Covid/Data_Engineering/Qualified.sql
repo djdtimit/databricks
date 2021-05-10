@@ -62,9 +62,9 @@ CREATE DATABASE covid_qualified
 -- MAGIC VALIDATION AS (
 -- MAGIC   SELECT
 -- MAGIC     NULLIF(FIPS, '') :: INT AS FIPS,
--- MAGIC     NULLIF(NULLIF(Admin2, ''), 'None') AS Admin2,
--- MAGIC     NULLIF(NULLIF(Province_State, ''), 'None') AS Province_State,
--- MAGIC     NULLIF(Country_Region, '') AS Country_Region,
+-- MAGIC     NULLIF(NULLIF(TRIM(Admin2), ''), 'None') AS Admin2,
+-- MAGIC     NULLIF(NULLIF(TRIM(Province_State), ''), 'None') AS Province_State,
+-- MAGIC     NULLIF(TRIM(Country_Region), '') AS Country_Region,
 -- MAGIC     CASE
 -- MAGIC       WHEN last_update like '%/%'
 -- MAGIC       AND LENGTH(last_update) = 15 THEN NULLIF(to_timestamp(last_update, 'M/dd/yyyy HH:mm'), '')
@@ -543,3 +543,7 @@ SELECT
   *
 FROM
   covid_qualified.vw_country_iso_data
+
+-- COMMAND ----------
+
+
