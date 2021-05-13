@@ -35,7 +35,7 @@ CREATE DATABASE covid_qualified
 -- MAGIC   FROM
 -- MAGIC     COVID_RAW.TBL_csse_covid_19_daily_reports
 -- MAGIC   WHERE
--- MAGIC     Province_State not like '%:%'
+-- MAGIC     Province_State not like '%:%' OR Province_State IS NULL
 -- MAGIC   UNION
 -- MAGIC   SELECT
 -- MAGIC     NULL AS FIPS,
