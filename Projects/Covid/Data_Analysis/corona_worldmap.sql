@@ -13,11 +13,4 @@ order by country_region
 
 -- COMMAND ----------
 
-SELECT sum(Confirmed)
-FROM covid_curated.VW_csse_covid_19_daily_reports_iso_names
-WHERE country_region = 'Germany' 
---order by last_update
-
--- COMMAND ----------
-
 
