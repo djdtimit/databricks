@@ -524,6 +524,11 @@ FROM
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC **country_iso_data**
+
+-- COMMAND ----------
+
 CREATE
 OR REPLACE VIEW covid_qualified.VW_country_iso_data AS
 SELECT
@@ -546,4 +551,33 @@ FROM
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC **WPP2019_TotalPopulationBySex**
 
+-- COMMAND ----------
+
+CREATE
+OR REPLACE VIEW covid_qualified.VW_WPP2019_TotalPopulationBySex AS
+SELECT
+  NULLIF(LocID, '') :: INT as LocID,
+  NULLIF(Location, '') as Location,
+  NULLIF(VarID, '') :: INT as VarID,
+  NULLIF(Variant, '') as Variant,
+  NULLIF(Time, '') :: INT AS Time,
+  NULLIF(MidPeriod, '') :: DECIMAL(5, 1) as MidPeriod,
+  NULLIF(PopMale * 1000, '') :: DECIMAL(10, 0) as PopMale,
+  NULLIF(PopFemale * 1000, '') :: DECIMAL(10, 0) as PopFemale,
+  NULLIF(PopTotal * 1000, '') :: DECIMAL(10, 0) as PopTotal,
+  NULLIF(PopDensity, '') :: DECIMAL(10, 3) as PopDensity,
+  _source,
+  _insert_TS
+FROM
+  covid_raw.TBL_WPP2019_TotalPopulationBySex
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS covid_qualified.TBL_WPP2019_TotalPopulationBySex USING DELTA LOCATION '/mnt/covid/Qualified/TBL_WPP2019_TotalPopulationBySex/' AS
+SELECT
+  *
+FROM
+  covid_qualified.VW_WPP2019_TotalPopulationBySex

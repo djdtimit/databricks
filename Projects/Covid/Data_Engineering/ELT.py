@@ -235,6 +235,13 @@ write_csv_into_raw(mnt_point_germany_vaccinations_by_state_v1_Ingestion, mnt_poi
 
 # COMMAND ----------
 
+# mnt_point_WPP2019_TotalPopulationBySex_Ingestion = '/mnt/covid/Ingestion/WPP2019_TotalPopulationBySex/'
+# mnt_point_WPP2019_TotalPopulationBySex_Raw = '/mnt/covid/Raw/TBL_WPP2019_TotalPopulationBySex/'
+
+# write_csv_into_raw(mnt_point_WPP2019_TotalPopulationBySex_Ingestion, mnt_point_WPP2019_TotalPopulationBySex_Raw)
+
+# COMMAND ----------
+
 mnt_point_RKI_Altersgruppen_Ingestion = '/mnt/covid/Ingestion/RKI_Altersgruppen/'
 mnt_point_RKI_Altersgruppen_Raw = '/mnt/covid/Raw/TBL_RKI_Altersgruppen/'
 

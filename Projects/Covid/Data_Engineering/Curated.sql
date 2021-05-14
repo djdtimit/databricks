@@ -388,24 +388,9 @@ USING DELTA
 LOCATION '/mnt/covid/Curated/TBL_csse_covid_19_daily_reports_iso_names/'
 AS 
 SELECT
-  ccd.FIPS,
-  ccd.Admin2,
-  ccd.Province_State,
-  ccd.Country_Region,
-  ccd.last_update,
-  ccd.Latitude,
-  ccd.Longitude,
-  ccd.Confirmed,
-  ccd.Deaths,
-  ccd.Recovered,
-  ccd.Active,
-  ccd.Incidence_Rate,
-  ccd.Case_Fatality_Ratio,
-  cid.alpha3,
-  ccd._INSERT_TS
+  *
 FROM
-  covid_qualified.TBL_csse_covid_19_daily_reports ccd
-  LEFT JOIN covid_qualified.tbl_country_iso_data cid on ccd.Country_Region = cid.name
+  covid_curated.VW_csse_covid_19_daily_reports_iso_names
 
 -- COMMAND ----------
 
@@ -425,7 +410,10 @@ SELECT
   ccd.Incidence_Rate,
   ccd.Case_Fatality_Ratio,
   cid.alpha3,
+  wpp.PopTotal,
   ccd._INSERT_TS
 FROM
   covid_qualified.TBL_csse_covid_19_daily_reports ccd
   LEFT JOIN covid_qualified.tbl_country_iso_data cid on ccd.Country_Region = cid.name
+  left join covid_qualified.TBL_WPP2019_TotalPopulationBySex wpp
+on ccd.country_region = wpp.location and year(ccd.last_update) = wpp.time

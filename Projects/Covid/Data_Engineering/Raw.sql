@@ -150,3 +150,19 @@ CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_country_iso_data
 USING DELTA
 LOCATION
 '/mnt/covid/Raw/TBL_country_iso_data/'
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **population data**
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS COVID_RAW.TBL_WPP2019_TotalPopulationBySex
+USING DELTA
+LOCATION
+'/mnt/covid/Raw/TBL_WPP2019_TotalPopulationBySex/'
+
+-- COMMAND ----------
+
+
