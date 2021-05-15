@@ -446,7 +446,3 @@ for database_object in database_objects:
 # MAGIC %sql
 # MAGIC OPTIMIZE covid_curated.TBL_csse_covid_19_daily_reports_iso_names;
 # MAGIC VACUUM  covid_curated.TBL_csse_covid_19_daily_reports_iso_names;
-
-# COMMAND ----------
-
-
