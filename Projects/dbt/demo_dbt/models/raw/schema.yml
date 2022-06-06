@@ -1,6 +1,15 @@
 
 version: 2
 
+sources:
+  - name: dbx_datasets_retail_org
+    description: "A sample dataset provided by databricks"
+    database: retail_org
+    schema: retail_org
+    tables:
+      - name: sales_orders
+        description: "Details about the sales orders"
+
 models:
   - name: my_first_dbt_model
     description: "A starter dbt model"
@@ -19,3 +28,5 @@ models:
         tests:
           - unique
           - not_null
+
+  

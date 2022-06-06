@@ -1,5 +1,3 @@
-{{ config(schema='raw') }}
-
 with source_sales_orders as (
     select * from {{ source('dbx_datasets_retail_org', 'sales_orders') }}
 ),
