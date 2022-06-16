@@ -26,7 +26,7 @@ clean-targets:         # directories to be removed by `dbt clean`
 
 vars:
   'dbt_date:time_zone': 'Europe/Berlin'
-  current_champion: "Lakers"
+  current_champion: Lakers
 
 
 

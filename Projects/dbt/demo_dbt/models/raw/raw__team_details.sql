@@ -10,17 +10,21 @@ team_locations AS (
     FROM
         {{ ref('team_locations') }}
 ),
-final AS (
+FINAL AS (
     SELECT
         teams.team,
-        team_locations.city,
-        team_locations.state
+        TRIM(
+            team_locations.city
+        ) AS city,
+        TRIM(
+            team_locations.state
+        ) AS state,
+        teams.team = '{{ var("current_champion") }}' as is_champion
     FROM
         teams
         LEFT JOIN team_locations
-        ON team_locations.name = teams.team
-)
-SELECT
-    *
-FROM
-    final
+        ON team_locations.name = teams.team)
+    SELECT
+        *
+    FROM
+        FINAL
