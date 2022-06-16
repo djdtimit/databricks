@@ -4,7 +4,6 @@ version: 2
 sources:
   - name: dbx_datasets_retail_org
     description: "A sample dataset provided by databricks"
-    database: retail_org
     schema: retail_org
     tables:
       - name: sales_orders
@@ -12,7 +11,7 @@ sources:
 
 models:
   - name: my_first_dbt_model
-    description: "A starter dbt model"
+    description: '{{ doc("table_events") }}'
     columns:
       - name: id
         description: "The primary key for this table"
