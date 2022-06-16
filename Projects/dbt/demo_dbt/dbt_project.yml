@@ -45,3 +45,6 @@ models:
 
 seeds: 
   +schema: raw
+
+on-run-start: "insert into raw.dbt_audits (audit_type) values ('run_start');"
+on-run-end: "insert into raw.dbt_audits (audit_type) values ('run_end');"
