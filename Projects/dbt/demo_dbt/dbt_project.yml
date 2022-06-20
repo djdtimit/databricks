@@ -44,6 +44,9 @@ models:
     raw:
       +materialized: table
       +schema: raw
+      +tags: 
+            - p1
+            - another_tag
 
 seeds: 
   +schema: raw

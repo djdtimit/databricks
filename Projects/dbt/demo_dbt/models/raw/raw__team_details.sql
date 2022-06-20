@@ -1,4 +1,9 @@
+{{ config(
+    tags = ["special"]
+) }}
+
 WITH teams AS (
+
     SELECT
         *
     FROM
@@ -19,12 +24,14 @@ FINAL AS (
         TRIM(
             team_locations.state
         ) AS state,
-        teams.team = '{{ var("current_champion") }}' as is_champion
+        teams.team = '{{ var("current_champion") }}' AS is_champion
     FROM
         teams
         LEFT JOIN team_locations
-        ON team_locations.name = teams.team)
-    SELECT
-        *, '{{ invocation_id }}' as invocation_id
-    FROM
-        FINAL
+        ON team_locations.name = teams.team
+)
+SELECT
+    *,
+    '{{ invocation_id }}' AS invocation_id
+FROM
+    FINAL
