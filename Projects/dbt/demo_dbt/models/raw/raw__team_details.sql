@@ -25,6 +25,6 @@ FINAL AS (
         LEFT JOIN team_locations
         ON team_locations.name = teams.team)
     SELECT
-        *
+        *, '{{ invocation_id }}' as invocation_id
     FROM
         FINAL
