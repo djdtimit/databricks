@@ -3,4 +3,6 @@
 
 select *
 from {{ ref('my_first_dbt_model') }}
+{% if target.name == 'dev' %}
 where id = 1
+{% endif %}
