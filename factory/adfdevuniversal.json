@@ -1,5 +1,13 @@
 {
 	"name": "adfdevuniversal",
+	"properties": {
+		"globalParameters": {
+			"env": {
+				"type": "string",
+				"value": "dev"
+			}
+		}
+	},
 	"location": "germanywestcentral",
 	"identity": {
 		"type": "SystemAssigned",
