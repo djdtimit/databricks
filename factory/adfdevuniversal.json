@@ -1,0 +1,9 @@
+{
+	"name": "adfdevuniversal",
+	"location": "germanywestcentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "77f65982-78fd-4340-a4dd-910b592dd72e",
+		"tenantId": "d232b037-d49e-42a4-b8a1-3bec0be5960e"
+	}
+}
