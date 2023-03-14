@@ -1,0 +1,47 @@
+{
+    "name": "ORPDF DevContainer",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "args": {
+            "TF_VERSION": "1.3.6",
+            "TF_DOCS_VERSION":"0.16.0",
+            "PS_VERSION":"7.3.0",
+            "DB_PY_VERSION": "3.9.5"
+        }
+    },
+    "postStartCommand": "pipenv install --dev",
+    "postCreateCommand": "",
+    "extensions": [
+        "davidanson.vscode-markdownlint",
+        "eamodio.gitlens",
+        "github.vscode-pull-request-github",
+        "gruntfuggly.todo-tree",
+        "hashicorp.terraform",
+        "ms-python.black-formatter",
+        "ms-python.flake8",
+        "ms-python.pylint",
+        "ms-python.python",
+        "ms-vscode.PowerShell",
+        "ms-vscode.azure-account",
+        "ms-vscode.azurecli",
+        "ms-vsliveshare.vsliveshare",
+        "redhat.vscode-yaml"
+    ],
+    "settings": {
+        "python.pythonPath": "/usr/local/bin/python",
+        "python.linting.pylintEnabled": true,
+        "python.linting.pydocstyleEnabled": true,
+        "python.linting.flake8Enabled": true,
+        "python.linting.mypyEnabled": true,
+        "python.linting.enabled": true,
+        "python.formatting.blackArgs": [
+            "--line-length",
+            "120"
+        ],
+        "[python]": {
+            "editor.defaultFormatter": "ms-python.black-formatter",
+            "editor.formatOnSave": true
+        },
+        "files.eol": "\n"
+    }
+}
