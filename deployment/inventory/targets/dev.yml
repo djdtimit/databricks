@@ -5,3 +5,11 @@ parameters:
   kapitan:
     vars:
       target: "dev"
+    compile:
+    - input_paths:
+        - "components/bootstrap"
+      input_type: jinja2 
+      output_path: "bootstrap"
+
+  environment: "dev"
+  environment_long: "development"
