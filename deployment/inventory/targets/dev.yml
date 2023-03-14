@@ -1,0 +1,7 @@
+classes:
+  - common
+
+parameters:
+  kapitan:
+    vars:
+      target: "dev"

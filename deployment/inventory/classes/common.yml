@@ -1,0 +1,13 @@
+parameters:
+  azure:
+    tenant_id: aca54848-01e6-4090-9173-a5ead63aaa65
+    location: "westeurope"
+    location_short: "euw"
+    resource_groups:
+      prefix: "rg-tse-dataplatform"
+      groups:
+      - integration
+      - infrastructure
+      - network
+      - storage
+      - service
