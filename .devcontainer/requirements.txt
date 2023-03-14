@@ -1,0 +1,7 @@
+build
+databricks-cli
+kapitan
+msal
+msrest
+typing-extensions
+pipenv
